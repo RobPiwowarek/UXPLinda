@@ -2,8 +2,10 @@
 #define UXPLINDA_PATTERN_H
 
 #include <unordered_map>
-#include "Tuple.h"
+// i nie myslcie nawet o przesunieciu pattern przed tuple w cmakelists
+//#include "Tuple.h"
 
+class Tuple;
 class Pattern {
 
 public:

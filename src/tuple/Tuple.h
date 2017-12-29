@@ -19,18 +19,16 @@ private:
 };
 
 
-// TODO: trzeba zrobic hasha dla wlasnej klasy dla unordered_set'a, przyklad przekopiowany ze stacka ale z jakiegos powodu nie dziala
+namespace std {
+    template <>
+    struct hash<Tuple> {
+        size_t operator()(Tuple const &tuple) const noexcept {
+            std::hash<std::string> hasher;
 
-struct hash<Tuple>
-{
-    size_t operator()(Tuple const & tuple) const noexcept
-    {
-        std::hash<std::string> hasher;
+            std::string str = tuple.toString();
 
-        std::string str = tuple.toString();
-
-        return hasher(str);
-    }
-};
-
+            return hasher(str);
+        }
+    };
+}
 #endif //UXPLINDA_TUPLE_H
