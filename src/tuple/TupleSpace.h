@@ -13,11 +13,11 @@ public:
     virtual ~TupleSpace();
 
     // dodanie do przestrzeni podana krotki
-    bool output(const Tuple & tuple);
+    bool output(const Tuple &tuple);
 
-    Tuple * read(const Pattern & pattern, unsigned int timeout);
+    Tuple *read(const Pattern &pattern) const;
 
-    Tuple * input(const Pattern & pattern, unsigned int timeout);
+    Tuple *input(const Pattern &pattern);
 
 private:
     std::unordered_set<Tuple> tuples;

@@ -8,11 +8,15 @@ class Tuple {
 public:
     explicit Tuple(Pattern *pattern);
 
+    explicit Tuple(const std::string &tuple);
+
     virtual ~Tuple();
+
+    bool operator==(const Tuple& other) const;
 
     std::string toString() const;
 
-    static Tuple * Empty();
+    static Tuple *Empty();
 
 private:
     std::string tuple;
@@ -20,7 +24,7 @@ private:
 
 
 namespace std {
-    template <>
+    template<>
     struct hash<Tuple> {
         size_t operator()(Tuple const &tuple) const noexcept {
             std::hash<std::string> hasher;
