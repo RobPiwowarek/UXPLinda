@@ -6,6 +6,7 @@
 //#include "Tuple.h"
 
 class Tuple;
+
 class Pattern {
 
 public:
@@ -13,7 +14,7 @@ public:
 
     virtual ~Pattern();
 
-    bool match(Tuple *tuple);
+    bool match(const Tuple *tuple) const;
 
 private:
     std::string pattern;
