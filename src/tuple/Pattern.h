@@ -12,6 +12,8 @@ class Pattern {
 public:
     Pattern();
 
+    Pattern(const std::string &patter);
+
     virtual ~Pattern();
 
     bool match(const Tuple *tuple) const;

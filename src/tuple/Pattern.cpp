@@ -8,6 +8,8 @@
 
 Pattern::Pattern() {}
 
+Pattern::Pattern(const std::string &patter) : pattern(patter){}
+
 Pattern::~Pattern() {
 
 }
@@ -17,7 +19,7 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
     std::string token;
     std::istringstream tokenStream(s);
     while (std::getline(tokenStream, token, delimiter)) {
-        if (token[0] == ' ') token.erase(0);
+        if (token[0] == ' ') token.erase(0,1);
         tokens.push_back(token);
     }
     return tokens;
@@ -113,7 +115,7 @@ bool match_string(std::string patternField, std::string tupleField) {
 bool Pattern::match(const Tuple *t) const {
     std::string tuple = t->toString();
     // get rid of brackets first
-    tuple.erase(0);
+    tuple.erase(tuple.begin());
     tuple.erase(tuple.size() - 1);
 
     std::vector<std::string> patternFields = split(pattern, ',');
