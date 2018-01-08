@@ -20,13 +20,14 @@ int Server::run() {
     int tempFD[2];
 
     if (pipe(tempFD) < 0) // tempFD[0] wejsciowy dla serwera, z tego odczytuje requesty od klientow
-        return(NULL); // error -> brak wolnych deskryptorow
+        return -1; // error -> brak wolnych deskryptorow
+    REQUEST_PIPE_FD = tempFD[0];
 
     for (int i = 0; i < fileNames.size(); ++i){
         int clientFD[2];
 
         if (pipe(clientFD) < 0)
-            return(NULL); // error -> brak wolnych deskryptorow
+            return -1; // error -> brak wolnych deskryptorow
 
         RESULT_PIPE_FDS[i][0] = clientFD[0];
         RESULT_PIPE_FDS[i][1] = clientFD[1];
@@ -41,7 +42,9 @@ int Server::run() {
             // otworz/zamknij odpowiedni pipe
             close(tempFD[0]);
             close(RESULT_PIPE_FDS[pipeIndex][1]);
-            execve(file, nullptr, nullptr); // TODO: pewnie trzeba bedzie przekazac deskryptory potokow - a przynajmniej index, also chyba lepiej uzyc execl
+            dup2(tempFD[1], Client::WriteFD);
+            dup2(RESULT_PIPE_FDS[pipeIndex][0], Client::ReadFD);
+            execve(file, nullptr, nullptr); // chyba lepiej uzyc execl
         }
         else {
             childrenPIDs.push_back(pid);
