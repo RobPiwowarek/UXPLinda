@@ -3,12 +3,13 @@
 #include <cstring>
 #include <functional>
 #include <regex>
+#include <iostream>
 #include "Pattern.h"
 #include "Tuple.h"
 
 Pattern::Pattern() {}
 
-Pattern::Pattern(const std::string &patter) : pattern(patter){}
+Pattern::Pattern(const std::string &patter) : pattern(patter) {}
 
 Pattern::~Pattern() {
 
@@ -19,97 +20,153 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
     std::string token;
     std::istringstream tokenStream(s);
     while (std::getline(tokenStream, token, delimiter)) {
-        if (token[0] == ' ') token.erase(0,1);
-        tokens.push_back(token);
+        if (token[0] == ' ') token.erase(0, 1);
+        if (token.length() > 0)
+            tokens.push_back(token);
     }
     return tokens;
 }
 
-bool match_int(std::string patternField, const std::string &tupleField) {
+// returns comparison function and pattern stripped down to only the value
+std::tuple<std::function<bool(int, int)>, std::string> patternToIntComparison(std::string pattern) {
+    std::function<bool(int, int)> comparison = [](int j, int k) { return j == k; };
+
+    if (pattern[0] == '=' && pattern[1] == '=') {
+        pattern.erase(0, 2);
+    } else if (pattern[0] == '>') {
+        pattern.erase(0, 1);
+        comparison = [](int j, int k) { return j > k; };
+        if (pattern[0] == '=') {
+            pattern.erase(0, 1);
+            comparison = [](int j, int k) { return j >= k; };
+        }
+    } else if (pattern[0] == '<') {
+        pattern.erase(0, 1);
+        comparison = [](int j, int k) { return j < k; };
+        if (pattern[0] == '=') {
+            pattern.erase(0, 1);
+            comparison = [](int j, int k) { return j <= k; };
+        }
+    } else if (pattern[0] == '*') {
+        pattern.erase(0, 1);
+        if (pattern.length() == 0) pattern.push_back('0'); // ugly
+        comparison = [](int j, int k) { return true; };
+    } else if (pattern[0] < '0') throw std::invalid_argument("Invalid pattern");
+
+    return std::make_tuple(comparison, pattern);
+}
+
+// returns comparison function, pattern stripped down to only the value
+// and a bool that is true if it's an inequality comparison
+std::tuple<std::function<bool(char, char)>, std::string, bool> patternToStringComparison(std::string pattern) {
+    bool lexi = false;
+    std::function<bool(char, char)> comparison = [](char j, char k) { return j == k; };
+
+    if (pattern[0] == '>') {
+        lexi = true;
+        pattern.erase(0, 1);
+        comparison = [](char j, char k) { return j > k; };
+        if (pattern[1] == '=') {
+            pattern.erase(0, 1);
+            comparison = [](char j, char k) { return j >= k; };
+        }
+    } else if (pattern[0] == '<') {
+        lexi = true;
+        pattern.erase(0);
+        comparison = [](char j, char k) { return j < k; };
+        if (pattern[1] == '=') {
+            pattern.erase(0, 1);
+            comparison = [](char j, char k) { return j <= k; };
+        }
+    }
+
+    if (!lexi) {
+        if (pattern[0] == '=' && pattern[1] == '=') {
+            pattern.erase(0, 2);
+        }
+        if (pattern[0] == pattern[pattern.size() - 1] == '"') {
+            // remove "'s
+            pattern.erase(0, 1);
+            pattern.erase(pattern.size() - 1, 1);
+        }
+    } else throw (std::invalid_argument("Invalid pattern given"));
+
+    return std::make_tuple(comparison, pattern, lexi);
+}
+
+bool match_int(const std::string &patternField, const std::string &tupleField) {
     try {
         size_t pos;
         int j = std::stoi(tupleField, &pos); // will throw if doesnt start with digit
-        if (pos != tupleField.size()) return false; // trash characters after int in tuple
-        std::function<bool(int, int)> comparison;
+        if (pos != tupleField.size()) return false; // non digit chars after int
 
-        comparison = [](int j, int k) { return j == k; };
-        if (patternField[0] == '=' && patternField[1] == '=') {
-            patternField.erase(0, 2);
-        } else if (patternField[0] == '>') {
-            patternField.erase(0);
-            comparison = [](int j, int k) { return j > k; };
-            if (patternField[1] == '=') {
-                patternField.erase(0);
-                comparison = [](int j, int k) { return j >= k; };
-            }
-        } else if (patternField[0] == '<') {
-            patternField.erase(0);
-            comparison = [](int j, int k) { return j < k; };
-            if (patternField[1] == '=') {
-                patternField.erase(0);
-                comparison = [](int j, int k) { return j <= k; };
-            }
-        } else if (patternField[0] == '*') {
-            comparison = [](int j, int k) { return true; };
-        } else if (patternField[0] < '0') return false; //invalid pattern
+        auto tuple = patternToIntComparison(patternField);
+        auto comparison = std::get<0>(tuple);
+        std::string val = std::get<1>(tuple);
 
-        int k = std::stoi(patternField, &pos); //will throw if doesnt start with digit
-        if (pos != patternField.size()) return false;
-        if (!comparison(j, k)) return false; //match failed
+        int k = std::stoi(val, &pos); //will throw if doesnt start with digit
+        return comparison(j, k);
     }
     catch (std::invalid_argument &e) {
         return false;
     }
 }
 
-bool match_string(std::string patternField, std::string tupleField) {
-    std::string &a = tupleField;
-    if (a[0] != '"' || a[a.size() - 1 != '"']) return false;
+bool match_string(const std::string &patternField, const std::string &tupleField) {
+    std::string a = tupleField;
+    if (a[0] != '"' || a[a.size() - 1] != '"') return false;
     // remove "'s
-    a.erase(0);
-    a.erase(a.size() - 1);
+    a.erase(0, 1);
+    a.erase(a.size() - 1, 1);
 
-    std::string &b = patternField;
+    auto tuple = patternToStringComparison(patternField);
+    auto comparison = std::get<0>(tuple);
+    std::string b = std::get<1>(tuple);
+    bool lexi = std::get<2>(tuple);
 
-    std::function<bool(std::string, std::string)> comparison;
+    auto aIt = a.begin(); // tuple
+    auto bIt = b.begin(); // pattern with *s
+    auto aItSave = a.end();
+    auto bItSave = b.end();
+    bool check;
 
-    //comparison = [](char j, char k) { return j == k; };
-    if (b[0] == '=' && b[1] == '=') {
-        b.erase(0, 2);
+
+    // check until first *
+    for (; aIt != a.end() && bIt != b.end() && *bIt != '*'; ++aIt, ++bIt) {
+        check = comparison(*aIt, *bIt);
+        if (!check) return false;
+        else if (*aIt != *bIt) return true; // lexicographic match
     }
-    if (b[0] == b[b.size() - 1] == '"') {
-        // remove "'s
-        b.erase(0);
-        b.erase(b.size() - 1);
 
-        // TODO - regex for equal comparison???
+    for (; aIt != a.end() && bIt != b.end(); ++aIt, ++bIt) {
+        if (*bIt == '*') {
+            // save points
+            aItSave = aIt;
+            bItSave = bIt;
+        } else {
+            check = comparison(*aIt, *bIt);
+            if (!check) {
+                // if no * before then no match
+                if (aItSave == a.end() || bItSave == b.end()) return false;
+                // if there was a * before
+                bIt = bItSave; // reset pattern to save point
+                aIt = ++aItSave; // reset tuple to one char after save point, make new save point
+            } else if (*aIt != *bIt) return true; // lexicographic match
+        }
     }
 
-    // assuming no * - maybe regex too????????
-    if (b[0] == '>') {
-        b.erase(0);
-        comparison = [](std::string j, std::string k) { return j > k; };
-        if (b[1] == '=') {
-            b.erase(0);
-            comparison = [](std::string j, std::string k) { return j >= k; };
-        }
-    } else if (b[0] == '<') {
-        b.erase(0);
-        comparison = [](std::string j, std::string k) { return j < k; };
-        if (b[1] == '=') {
-            b.erase(0);
-            comparison = [](std::string j, std::string k) { return j <= k; };
-        }
-    } else if (b == "*") {
-        return true;
-    } else return false; // invalid pattern
-    if (b[0] != '"' || b[b.size() - 1 != '"']) return false;
+    // remove trailing *s
+    for (; bIt != b.end() && *bIt == '*'; ++bIt) {}
 
-    // remove "'s
-    b.erase(0);
-    b.erase(b.size() - 1);
+    if(*(bIt-1) == '*') return true; // * was last char in pattern
 
-    if (!comparison(a, b)) return false;
+    // ik = 00 - tuple equally matched pattern          (==)
+    //      01 - tuple had less chars than should match (<)
+    //      10 - tuple had more chars than matched      (>)
+    char i = aIt != a.end();
+    char k = bIt != b.end();
+
+    return comparison(i, k);
 }
 
 bool Pattern::match(const Tuple *t) const {
@@ -126,9 +183,9 @@ bool Pattern::match(const Tuple *t) const {
     for (int i = 0; i < patternFields.size(); ++i) {
         fieldPair = split(patternFields[i], ':');
         if (!strcasecmp(fieldPair[0].c_str(), "integer")) {
-            return match_int(fieldPair[1], tupleFields[i]);
+            if (!match_int(fieldPair[1], tupleFields[i])) return false;
         } else if (!strcasecmp(fieldPair[0].c_str(), "string")) {
-            return match_string(fieldPair[1], tupleFields[i]);
+            if (!match_string(fieldPair[1], tupleFields[i])) return false;
         }
     }
     return true;
