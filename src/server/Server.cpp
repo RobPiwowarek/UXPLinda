@@ -19,6 +19,25 @@ Server::~Server() {
 int Server::run() {
     int tempFD[2];
 
+    if (setupResultPipe(tempFD) == -1)
+        return -1;
+
+    setupAndExecClients(tempFD);
+
+    // closing READ pipes for parent
+    close(tempFD[1]);
+
+    for(int i = 0; i < fileNames.size(); ++i){
+        close(RESULT_PIPE_FDS[i][0]);
+    }
+
+    //todo:
+    sem = sem_open(SNAME, O_CREAT, 0644, 3);
+
+    return readingLoop();
+}
+
+int Server::setupResultPipe(int *tempFD) {
     if (pipe(tempFD) < 0) // tempFD[0] wejsciowy dla serwera, z tego odczytuje requesty od klientow
         return -1; // error -> brak wolnych deskryptorow
     REQUEST_PIPE_FD = tempFD[0];
@@ -33,6 +52,10 @@ int Server::run() {
         RESULT_PIPE_FDS[i][1] = clientFD[1];
     }
 
+    return 0;
+}
+
+int Server::setupAndExecClients(int *tempFD) {
     int pipeIndex = 0;
     for (auto file: fileNames){
         pid_t pid = fork();
@@ -53,11 +76,61 @@ int Server::run() {
         ++pipeIndex;
     }
 
-    // closing READ pipes for parent
-    close(tempFD[1]);
+    return 0;
+}
 
-    for(int i = 0; i < fileNames.size(); ++i){
-        close(RESULT_PIPE_FDS[i][0]);
+int Server::readingLoop() {
+
+    while (true) { // todo: obsluga sygnalu czy cos ktora by to zamknela
+        sem_wait(sem);
+
+        ssize_t bytesRead;
+        Request::RequestType type;
+        pid_t clientPid;
+        int datasize;
+        char *data;
+
+        // fixme: mam nadzieje ze to nie popsuje enuma?
+        bytesRead = read(REQUEST_PIPE_FD, &type, 1);
+        if (bytesRead < 1){
+            // todo: error
+            break;
+        }
+
+        bytesRead = read(REQUEST_PIPE_FD, &clientPid, 4);
+        if (bytesRead < 4) {
+            // todo: error
+            break;
+        }
+
+        bytesRead = read(REQUEST_PIPE_FD, &datasize, 4);
+        if (bytesRead < 4) {
+            // todo: error
+            break;
+        }
+
+        data = new char[datasize];
+
+        bytesRead = read(REQUEST_PIPE_FD, data, static_cast<size_t>(datasize));
+        if (bytesRead < datasize){
+            // todo: error
+            break;
+        }
+
+        Request request(type, clientPid, data, datasize);
+        processRequest(request);
+    }
+
+    return 0;
+}
+
+int Server::processRequest(Request request) {
+    if (request.getRequestType() == Request::RequestType::OUTPUT){
+        Tuple tuple(request.getData());
+        tupleSpace->output(tuple);
+    }
+    else {
+
     }
 
     return 0;

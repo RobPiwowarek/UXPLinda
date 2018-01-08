@@ -17,7 +17,7 @@ target_link_libraries(UXPLindaDBG
         ${CMAKE_THREAD_LIBS_INIT})
 
 
-add_executable(UXPLinda main.cpp src/server/Server.cpp src/server/Server.h src/client/Client.cpp src/client/Client.h src/tuple/TupleSpace.cpp src/tuple/TupleSpace.h src/tuple/Tuple.cpp src/tuple/Tuple.h src/tuple/Pattern.cpp src/tuple/Pattern.h src/server/Request.cpp src/server/Request.h src/server/CMDParser.cpp src/server/CMDParser.h)
+#add_executable(UXPLinda main.cpp src/server/Server.cpp src/server/Server.h src/client/Client.cpp src/client/Client.h src/tuple/TupleSpace.cpp src/tuple/TupleSpace.h src/tuple/Tuple.cpp src/tuple/Tuple.h src/tuple/Pattern.cpp src/tuple/Pattern.h src/server/Request.cpp src/server/Request.h src/server/CMDParser.cpp src/server/CMDParser.h)
 
 #target_link_libraries(UXPLinda ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 

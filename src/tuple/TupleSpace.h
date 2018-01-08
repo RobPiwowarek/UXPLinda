@@ -13,7 +13,7 @@ public:
     virtual ~TupleSpace();
 
     // dodanie do przestrzeni podana krotki
-    bool output(const Tuple &tuple);
+    bool output(Tuple tuple);
 
     Tuple *read(const Pattern &pattern) const;
 

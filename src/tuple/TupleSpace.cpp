@@ -25,6 +25,6 @@ Tuple *TupleSpace::read(const Pattern &pattern) const {
     return t;
 }
 
-bool TupleSpace::output(const Tuple &tuple) {
+bool TupleSpace::output(Tuple tuple) {
     return tuples.insert(tuple).second; // false if already existed
 }
