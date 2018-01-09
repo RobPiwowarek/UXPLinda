@@ -9,7 +9,8 @@ public:
     enum class RequestType {
         OUTPUT,
         READ,
-        INPUT
+        INPUT,
+        CANCEL
     };
 
     Request(RequestType type, pid_t clientID, char *data, int dataSize);
