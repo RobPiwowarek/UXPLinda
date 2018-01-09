@@ -5,7 +5,6 @@
 #include "../tuple/TupleSpace.h"
 #include "Request.h"
 #include <list>
-#include <vector>
 #include <unistd.h>
 #include <semaphore.h>
 #include <fcntl.h>
@@ -42,7 +41,7 @@ private:
 
     bool nothingNew = true;
     std::list<Request> requests;
-    std::vector<pid_t> childrenPIDs;
+    std::list<pid_t> childrenPIDs;
     std::list<char*> fileNames;
 
     int REQUEST_PIPE_FD;
