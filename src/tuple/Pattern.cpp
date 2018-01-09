@@ -7,9 +7,17 @@
 #include "Pattern.h"
 #include "Tuple.h"
 
+bool isPattern(const std::string &s) {
+    return std::regex_match(s, std::regex(PATTERN_REGEX));
+}
+
 Pattern::Pattern() {}
 
-Pattern::Pattern(const std::string &patter) : pattern(patter) {}
+Pattern::Pattern(const std::string &pattern) : pattern(pattern) {
+    if(!isPattern(pattern)) {
+        throw std::invalid_argument("String is not a valid pattern");
+    }
+}
 
 Pattern::~Pattern() {
 
@@ -84,12 +92,13 @@ std::tuple<std::function<bool(char, char)>, std::string, bool> patternToStringCo
         if (pattern[0] == '=' && pattern[1] == '=') {
             pattern.erase(0, 2);
         }
-        if (pattern[0] == pattern[pattern.size() - 1] == '"') {
-            // remove "'s
-            pattern.erase(0, 1);
-            pattern.erase(pattern.size() - 1, 1);
-        }
-    } else throw (std::invalid_argument("Invalid pattern given"));
+    }
+
+    if (pattern[0] == '"' && pattern[pattern.size() - 1] == '"') {
+        // remove "'s
+        pattern.erase(0, 1);
+        pattern.erase(pattern.size() - 1, 1);
+    }
 
     return std::make_tuple(comparison, pattern, lexi);
 }
@@ -190,4 +199,3 @@ bool Pattern::match(const Tuple *t) const {
     }
     return true;
 }
-

@@ -80,31 +80,31 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE (PatternsWithStringTests)
 
     BOOST_AUTO_TEST_CASE (dont_match_pattern_with_incorrect_string_tuple){
-        Pattern pattern = Pattern("String:123");
+        Pattern pattern = Pattern("String:\"123\"");
         Tuple tuple =  Tuple("(\"1234\")");
         BOOST_CHECK( ! pattern.match(&tuple) );
     }
 
     BOOST_AUTO_TEST_CASE (match_pattern_with_correct_string_tuple) {
-        Pattern pattern = Pattern("String:123");
+        Pattern pattern = Pattern("String:\"123\"");
         Tuple tuple = Tuple("(\"123\")");
         BOOST_CHECK(pattern.match(&tuple));
     }
 
     BOOST_AUTO_TEST_CASE (dont_match_pattern_with_correct_int_tuple){
-        Pattern pattern = Pattern("String:123");
+        Pattern pattern = Pattern("String:\"123\"");
         Tuple tuple =  Tuple("(1234)");
         BOOST_CHECK( ! pattern.match(&tuple) );
     }
 
     BOOST_AUTO_TEST_CASE (dont_match_incorrect_tuple_with_string_wild_chart_pattern){
-        Pattern pattern = Pattern("String:ab*");
+        Pattern pattern = Pattern("String:\"ab*\"");
         Tuple tuple =  Tuple("(\"aabc\")");
         BOOST_CHECK( ! pattern.match(&tuple) );
     }
 
     BOOST_AUTO_TEST_CASE (match_correct_tuple_with_string_wild_chart_pattern){
-        Pattern pattern = Pattern("String:ab*");
+        Pattern pattern = Pattern("String:\"ab*\"");
         Tuple tuple =  Tuple("(\"abc\")");
         BOOST_CHECK( pattern.match(&tuple) );
     }

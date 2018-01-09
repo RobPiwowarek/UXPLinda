@@ -1,9 +1,10 @@
 #ifndef UXPLINDA_PATTERN_H
 #define UXPLINDA_PATTERN_H
 
+// dont judge me for this
+#define PATTERN_REGEX R"((((String:\s*(((>|<|>=|<=|==)?"[^"]*")|\*))|(Integer:\s*(((>|<|>=|<=|==)?(-?\d+))|\*)))(,\s*((String:\s*(((>|<|>=|<=|==)?"[^"]*")|\*))|(Integer:\s*(((>|<|>=|<=|==)?(-?\d+))|\*))))*))"
+
 #include <unordered_map>
-// i nie myslcie nawet o przesunieciu pattern przed tuple w cmakelists
-//#include "Tuple.h"
 
 class Tuple;
 
@@ -12,7 +13,7 @@ class Pattern {
 public:
     Pattern();
 
-    Pattern(const std::string &patter);
+    Pattern(const std::string &pattern);
 
     virtual ~Pattern();
 
