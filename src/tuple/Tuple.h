@@ -1,12 +1,14 @@
 #ifndef UXPLINDA_TUPLE_H
 #define UXPLINDA_TUPLE_H
 
+#define TUPLE_REGEX R"(\((((("[^"]*")|(-?(\d)+)))(,\s*(("[^"]*")|(-?(\d)+)))*)\))"
+
 #include <unordered_map>
+#include <regex>
 #include "Pattern.h"
 
 class Tuple {
 public:
-    explicit Tuple(Pattern *pattern);
 
     explicit Tuple(const std::string &tuple);
 
