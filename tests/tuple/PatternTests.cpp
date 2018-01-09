@@ -121,4 +121,35 @@ BOOST_AUTO_TEST_SUITE (PatternsWithStringTests)
         BOOST_CHECK( !pattern.match(&tuple) );
     }
 
+    BOOST_AUTO_TEST_CASE (match_correct_tuple_with_with_many_string_pattern){
+        Pattern pattern = Pattern("String:5, String:*");
+        Tuple tuple =  Tuple("(\"5\", \"1\")");
+        BOOST_CHECK( pattern.match(&tuple) );
+    }
+
+    BOOST_AUTO_TEST_CASE (dont_match_tuple_with_with_many_string_pattern){
+        Pattern pattern = Pattern("String:5, String:*");
+        Tuple tuple =  Tuple("(\"4\", \"1\")");
+        BOOST_CHECK( ! pattern.match(&tuple) );
+    }
+
+    BOOST_AUTO_TEST_CASE (dont_match_tuple_with_with_many_string_pattern_2){
+        Pattern pattern = Pattern("String:5, String:4");
+        Tuple tuple =  Tuple("(\"5\", \"1\")");
+        BOOST_CHECK( ! pattern.match(&tuple) );
+    }
+
+    BOOST_AUTO_TEST_CASE (match_correct_tuple_with_with_both_types_pattern){
+        Pattern pattern = Pattern("Integer:5, String:*");
+        Tuple tuple =  Tuple("(5, \"1\")");
+        BOOST_CHECK( pattern.match(&tuple) );
+    }
+
+    BOOST_AUTO_TEST_CASE (dont_match_tuple_with_with_both_types_pattern){
+        Pattern pattern = Pattern("String:5, Integer:*");
+        Tuple tuple =  Tuple("(\"4\", 1)");
+        BOOST_CHECK( ! pattern.match(&tuple) );
+    }
+
+
 BOOST_AUTO_TEST_SUITE_END()
