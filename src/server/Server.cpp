@@ -135,3 +135,23 @@ int Server::processRequest(Request request) {
 
     return 0;
 }
+
+void Server::signalHandler(int sig)
+{
+    if (sig == SIGINT)
+    {
+        for (auto child: childrenPIDs){
+            kill(child, SIGKILL);
+        }
+        
+    }
+
+}
+
+void Server::initSignals()
+{
+    sigact.sa_handler = signalHandler;
+    sigemptyset(&sigact.sa_mask);
+    sigact.sa_flags = 0;
+    sigaction(SIGINT, &sigact, (struct sigaction *) nullptr);
+}

@@ -24,6 +24,8 @@ public:
 private:
     TupleSpace *tupleSpace;
 
+    struct sigaction sigact;
+
     int setupResultPipe(int []);
     int setupAndExecClients(int []);
 
@@ -37,6 +39,9 @@ private:
 
     int REQUEST_PIPE_FD;
     int **RESULT_PIPE_FDS; // fixme: moze dla pewnosci lepiej mapa PID -> int laczaca dziecko z odpowiednim pipem?
+    void initSignals();
+
+    void signalHandler(int sig);
 };
 
 #endif //UXPLINDA_SERVER_H
