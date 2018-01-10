@@ -15,7 +15,7 @@ class Server {
     sem_t *sem;// = sem_open(SNAME, O_CREAT, 0644, 3);
     pthread_mutex_t mutex;
     pthread_cond_t cond;
-    pthread_t requestThread;
+
 
 public:
     explicit Server(std::list<char*>);
@@ -24,8 +24,13 @@ public:
 
     virtual ~Server();
 
+    static pthread_t requestThread;
+    static std::list<pid_t> childrenPIDs;
+
 private:
     TupleSpace *tupleSpace;
+
+    struct sigaction sigact;
 
     int setupResultPipe(int []);
     int setupAndExecClients(int []);
@@ -41,12 +46,13 @@ private:
 
     bool nothingNew = true;
     std::list<Request> requests;
-    std::list<pid_t> childrenPIDs;
+
     std::list<char*> fileNames;
 
     int REQUEST_PIPE_FD;
     int **RESULT_PIPE_FDS; // fixme: moze dla pewnosci lepiej mapa PID -> int laczaca dziecko z odpowiednim pipem?
 
+    void initSignals();
 };
 
 #endif //UXPLINDA_SERVER_H

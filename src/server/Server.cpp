@@ -1,8 +1,13 @@
 #include <iostream>
+#include <wait.h>
 #include "Server.h"
+
+pthread_t Server::requestThread;
+std::list<pid_t> Server::childrenPIDs;
 
 Server::Server(std::list<char *> fileNames) {
     tupleSpace = new TupleSpace();
+    initSignals();
 
     this->fileNames = fileNames;
 
@@ -219,8 +224,35 @@ int Server::requestLoop() {
     }
 }
 
-void *Server::runRequestLoop(void *s) {
+void* Server::runRequestLoop(void *s) {
     auto server = (Server *) s;
     server->requestLoop();
     return nullptr;
+}
+
+void signalHandler(int sig)
+{
+    if (sig == SIGINT || sig == SIGKILL) {
+        for (auto child: Server::childrenPIDs){
+            kill(child, SIGKILL);
+        }
+
+        pthread_cancel(Server::requestThread);
+
+        for (auto child: Server::childrenPIDs){
+            int status = -1;
+            waitpid(child, &status, WEXITED);
+        }
+
+        exit(0); // lazy as fuck other than that i can set a flag for while loop.
+    }
+}
+
+void Server::initSignals()
+{
+    sigact.sa_handler = signalHandler;
+    sigemptyset(&sigact.sa_mask);
+    sigact.sa_flags = 0;
+    sigaction(SIGINT, &sigact, (struct sigaction *) nullptr);
+    sigaction(SIGKILL, &sigact, (struct sigaction *) nullptr);
 }
