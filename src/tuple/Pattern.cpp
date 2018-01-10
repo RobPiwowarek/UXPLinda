@@ -14,7 +14,7 @@ bool isPattern(const std::string &s) {
 Pattern::Pattern() {}
 
 Pattern::Pattern(const std::string &pattern) : pattern(pattern) {
-    if(!isPattern(pattern)) {
+    if (!isPattern(pattern)) {
         throw std::invalid_argument("String is not a valid pattern");
     }
 }
@@ -74,15 +74,15 @@ std::tuple<std::function<bool(char, char)>, std::string, bool> patternToStringCo
         lexi = true;
         pattern.erase(0, 1);
         comparison = [](char j, char k) { return j > k; };
-        if (pattern[1] == '=') {
+        if (pattern[0] == '=') {
             pattern.erase(0, 1);
             comparison = [](char j, char k) { return j >= k; };
         }
     } else if (pattern[0] == '<') {
         lexi = true;
-        pattern.erase(0);
+        pattern.erase(0, 1);
         comparison = [](char j, char k) { return j < k; };
-        if (pattern[1] == '=') {
+        if (pattern[0] == '=') {
             pattern.erase(0, 1);
             comparison = [](char j, char k) { return j <= k; };
         }
@@ -137,44 +137,47 @@ bool match_string(const std::string &patternField, const std::string &tupleField
     auto bIt = b.begin(); // pattern with *s
     auto aItSave = a.end();
     auto bItSave = b.end();
-    bool check;
+    bool check = false;
 
 
     // check until first *
     for (; aIt != a.end() && bIt != b.end() && *bIt != '*'; ++aIt, ++bIt) {
-        check = comparison(*aIt, *bIt);
+        check = *aIt == *bIt || comparison(*aIt, *bIt);
         if (!check) return false;
         else if (*aIt != *bIt) return true; // lexicographic match
     }
 
-    for (; aIt != a.end() && bIt != b.end(); ++aIt, ++bIt) {
+    for (; aIt != a.end() && bIt != b.end(); ++bIt) {
         if (*bIt == '*') {
             // save points
             aItSave = aIt;
             bItSave = bIt;
         } else {
-            check = comparison(*aIt, *bIt);
-            if (!check) {
-                // if no * before then no match
-                if (aItSave == a.end() || bItSave == b.end()) return false;
-                // if there was a * before
-                bIt = bItSave; // reset pattern to save point
-                aIt = ++aItSave; // reset tuple to one char after save point, make new save point
-            } else if (*aIt != *bIt) return true; // lexicographic match
+            check = *aIt == *bIt || comparison(*aIt, *bIt);
+            if (check && *aIt != *bIt) return true;
+            else {
+                ++aIt;
+                if (!check || !lexi && aIt != a.end() && bIt + 1 == b.end()) {
+                    // if no * before then no match
+                    if (aItSave == a.end() || bItSave == b.end()) return false;
+                    // if there was a * before
+                    bIt = bItSave; // reset pattern to save point
+                    aIt = ++aItSave; // reset tuple to one char after save point, make new save point
+                }
+            }
         }
     }
 
     // remove trailing *s
     for (; bIt != b.end() && *bIt == '*'; ++bIt) {}
 
-    if(*(bIt-1) == '*') return true; // * was last char in pattern
+    if (bIt == b.end() && *(bIt - 1) == '*') return true; // * was last char in pattern
 
     // ik = 00 - tuple equally matched pattern          (==)
     //      01 - tuple had less chars than should match (<)
     //      10 - tuple had more chars than matched      (>)
     char i = aIt != a.end();
     char k = bIt != b.end();
-
     return comparison(i, k);
 }
 
