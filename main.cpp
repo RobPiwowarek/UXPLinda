@@ -12,5 +12,11 @@ int main(int argc, char** argv) {
 
     Server server(fileNames);
 
-    return server.run();
+    server.run();
+
+    Client c;
+    timeval timeout;
+    timeout.tv_sec = 3;
+    c.input("String:*", &timeout);
+
 }
