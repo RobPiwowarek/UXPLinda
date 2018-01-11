@@ -5,10 +5,11 @@
 #include <iostream>
 #include "Client.h"
 
+#define SNAME "/mysem"
 
 Client::Client() {
     pid = getpid();
-    sem = sem_open(SNAME, O_CREAT, 0644, 3);
+    sem = sem_open(SNAME, 0);
 }
 
 Client::~Client() {
@@ -23,12 +24,6 @@ std::string Client::read(const std::string &pattern, timeval *timeout) {
     return getTupleFromServer(Request::RequestType::READ, pattern, timeout);
 }
 
-char *getWritable(const std::string &str) {
-    auto *writable = new char[str.size() + 1];
-    std::copy(str.begin(), str.end(), writable);
-    writable[str.size()] = '\0';
-    return writable;
-}
 
 void Client::handleTimeout() {
     auto *cancellation = new Request(Request::RequestType::CANCEL, pid, nullptr, 0);
@@ -59,13 +54,17 @@ std::string Client::getTupleFromServer(Request::RequestType requestType, const s
         std::cout<<error.what();
         return "";
     }
-    std::string str;
-    str += std::to_string(static_cast<int>(requestType));
-    str += std::to_string(pid);
-    str += std::to_string(pattern.size());
-    str += pattern;
+    int patternSize=pattern.size();
+    Request::RequestType type=Request::RequestType::OUTPUT;
+    const char * patternChar= pattern.c_str();
+    int msgSize=1+4+4+patternSize+1;
+    char* str = new char[msgSize];
+    memcpy(str , &type, 1);
+    memcpy(str, &pid, 4);
+    memcpy(str , &patternSize, 4);
+    memcpy(str , patternChar, patternSize+1);
 
-    write(WriteFD, str.c_str(), str.size()+1);//?+1?
+    write(WriteFD, str, sizeof(msgSize));
     sem_post(sem);
 
     fd_set set;
@@ -85,21 +84,25 @@ std::string Client::getTupleFromServer(Request::RequestType requestType, const s
     }
 }
 
-bool Client::output(const std::string &tuple) {
+bool Client::output(std::string tuple) {
     try {
         Tuple temp = Tuple(tuple);
     }catch(const std::invalid_argument &error){
         std::cout<<error.what();
         return false;
     }
+    int tupleSize=tuple.size();
+    Request::RequestType type=Request::RequestType::OUTPUT;
+    const char * tupleChar= tuple.c_str();
+    int msgSize=1+4+4+tupleSize+1;
+    char* str = new char[msgSize];
+    memcpy(str , &type, 1);
+    memcpy(str , &pid, 4);
+    memcpy(str , &tupleSize, 4);
+    memcpy(str , tupleChar, tupleSize+1);
 
-    std::string str;
-    str += std::to_string(static_cast<int>(Request::RequestType::OUTPUT));
-    str += std::to_string(pid);
-    str += std::to_string(tuple.size());
-    str += tuple;
-    write(WriteFD, str.c_str(), str.size()+1);
-
+    write(WriteFD, str, sizeof(msgSize));
+    sem_post(sem);
 }
 
 void Client::quit() {

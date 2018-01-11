@@ -1,10 +1,10 @@
 #ifndef UXPLINDA_CLIENT_H
 #define UXPLINDA_CLIENT_H
 
-#include <server/Request.h>
-#include <server/Server.h>
+#include <string>
 #include <semaphore.h>
-#include <tuple/Tuple.h>
+#include "../server/Server.h"
+#include "../server/Request.h"
 
 class Client {
     pid_t pid;
@@ -23,11 +23,11 @@ public:
 
     ~Client();
 
-    std::string  input(const std::string &inputTuple, timeval *timeout);
+    std::string input(const std::string &inputTuple, timeval *timeout);
 
-    std::string  read(const std::string &pattern, timeval *timeout);
+    std::string read(const std::string &pattern, timeval *timeout);
 
-    bool output(const std::string &tuple);
+    bool output(std::string tuple);
 
     void quit();
 };
