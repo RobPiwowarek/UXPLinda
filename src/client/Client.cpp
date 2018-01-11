@@ -1,10 +1,10 @@
 #include <ctime>
 #include <string>     // std::string, std::to_string
-#include <zconf.h>
+//#include <zconf.h>
 #include <signal.h>
+#include <iostream>
 #include "Client.h"
 
-//TODO change Tuple to string
 
 Client::Client() {
     pid = getpid();
@@ -15,13 +15,12 @@ Client::~Client() {
 
 }
 
-
-Tuple Client::input(const std::string &tupleString, timeval *timeout) {
-    return getTupleFromServer(Request::RequestType::INPUT, tupleString, timeout);
+std::string Client::input(const std::string &pattern, timeval *timeout) {
+    return getTupleFromServer(Request::RequestType::INPUT, pattern, timeout);
 }
 
-Tuple Client::read(const std::string &tupleString, timeval *timeout) {
-    return getTupleFromServer(Request::RequestType::READ, tupleString, timeout);
+std::string Client::read(const std::string &pattern, timeval *timeout) {
+    return getTupleFromServer(Request::RequestType::READ, pattern, timeout);
 }
 
 char *getWritable(const std::string &str) {
@@ -37,28 +36,34 @@ void Client::handleTimeout() {
     sem_post(sem);
 }
 
-Tuple Client::handleSuccess() {
+std::string Client::handleSuccess() {
     char *data;
     int bytesRead = ::read(ReadFD, &data, 4);
     if (bytesRead < 4) {
-        return Tuple("");
+        return "";
     }
     int dataSize = std::stoi(data);
     data = new char[dataSize];
-    bytesRead = ::read(ReadFD, data, static_cast<int>(dataSize));
+    bytesRead = ::read(ReadFD, data, dataSize);
     if (bytesRead < dataSize) {
-        return Tuple("");
+        return "";
     }
-    return Tuple(std::string(data));
+    return std::string(data);
     //TODO rozmiar, czy wiadomosc taka sama jak do serwera czy już z mniejszym nagłówkiem
 }
 
-Tuple Client::getTupleFromServer(Request::RequestType requestType, const std::string &data, timeval *timeout) {
+std::string Client::getTupleFromServer(Request::RequestType requestType, const std::string &pattern, timeval *timeout) {
+    try {
+        Pattern temp = Pattern(pattern);
+    }catch(const std::invalid_argument &error){
+        std::cout<<error.what();
+        return "";
+    }
     std::string str;
     str += std::to_string(static_cast<int>(requestType));
     str += std::to_string(pid);
-    str += std::to_string(data.size());
-    str += data;
+    str += std::to_string(pattern.size());
+    str += pattern;
 
     write(WriteFD, str.c_str(), str.size()+1);//?+1?
     sem_post(sem);
@@ -71,21 +76,30 @@ Tuple Client::getTupleFromServer(Request::RequestType requestType, const std::st
     int value = select(ReadFD + 1, &set, nullptr, nullptr, &timeout_select); //ReadFD+1 couse select needs so
 
     if (value == -1) {//error
-        return Tuple("");
+        return "";
     } else if (value == 0) {//timeOut
         handleTimeout();
+        return "";
     } else {//success
-        handleSuccess();
+        return handleSuccess();
     }
 }
 
-bool Client::output(const Tuple &tuple) {
+bool Client::output(const std::string &tuple) {
+    try {
+        Tuple temp = Tuple(tuple);
+    }catch(const std::invalid_argument &error){
+        std::cout<<error.what();
+        return false;
+    }
+
     std::string str;
     str += std::to_string(static_cast<int>(Request::RequestType::OUTPUT));
     str += std::to_string(pid);
-    str += std::to_string(tuple.toString().size());
-    str += tuple.toString();
+    str += std::to_string(tuple.size());
+    str += tuple;
     write(WriteFD, str.c_str(), str.size()+1);
+
 }
 
 void Client::quit() {

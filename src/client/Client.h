@@ -8,12 +8,12 @@
 
 class Client {
     pid_t pid;
-    sem_t *sem;// = sem_open(SNAME, O_CREAT, 0644, 3);
-    Tuple getTupleFromServer(Request::RequestType requestType, const std::string &inputTuple, timeval *timeout);
+    sem_t *sem;// semaphore used by server;
+    std::string getTupleFromServer(Request::RequestType requestType, const std::string &pattern, timeval *timeout);
 
     void handleTimeout();
 
-    Tuple handleSuccess();
+    std::string handleSuccess();
 
 public:
     static const int ReadFD = 1023;
@@ -23,11 +23,11 @@ public:
 
     ~Client();
 
-    Tuple input(const std::string &inputTuple, timeval *timeout);
+    std::string  input(const std::string &inputTuple, timeval *timeout);
 
-    Tuple read(const std::string &inputTuple, timeval *timeout);
+    std::string  read(const std::string &pattern, timeval *timeout);
 
-    bool output(const Tuple &tuple);
+    bool output(const std::string &tuple);
 
     void quit();
 };
