@@ -6,6 +6,7 @@
 #include <iostream>
 #include "Pattern.h"
 #include "Tuple.h"
+#include "limits.h"
 
 bool isPattern(const std::string &s) {
     return std::regex_match(s, std::regex(PATTERN_REGEX));
@@ -14,6 +15,9 @@ bool isPattern(const std::string &s) {
 Pattern::Pattern() {}
 
 Pattern::Pattern(const std::string &pattern) : pattern(pattern) {
+    if(pattern.length()+1 > PIPE_BUF-9) {
+        throw std::invalid_argument("String too long for pipe");
+    }
     if (!isPattern(pattern)) {
         throw std::invalid_argument("String is not a valid pattern");
     }

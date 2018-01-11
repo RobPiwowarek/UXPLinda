@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Tuple.h"
+#include "limits.h"
 
 bool isTuple(const std::string& s) {
     return std::regex_match(s, std::regex(TUPLE_REGEX));
@@ -18,6 +19,9 @@ Tuple *Tuple::Empty() {
 }
 
 Tuple::Tuple(const std::string &tuple) : tuple(tuple) {
+    if(tuple.length()+1 > PIPE_BUF-9) {
+        throw std::invalid_argument("String too long for pipe");
+    }
     if(!isTuple(tuple)) {
         throw std::invalid_argument("String is not a valid tuple");
     }
