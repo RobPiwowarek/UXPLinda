@@ -18,7 +18,7 @@ Server::Server(std::list<char *> fileNames) {
         RESULT_PIPE_FDS[i] = new int[2];
     }
 
-    sem = sem_open(SNAME, O_CREAT, 0644, 3);
+    sem = sem_open(SNAME, O_CREAT, 0644, 0);
     pthread_mutex_init(&mutex, nullptr);
     pthread_cond_init(&cond, nullptr);
 }
@@ -113,27 +113,33 @@ int Server::readingLoop() {
         bytesRead = read(REQUEST_PIPE_FD, &type, 1);
         if (bytesRead < 1) {
             // todo: error
-            break;
+            std::cout << "nie odczytano typu " << data;
+            continue;
         }
 
         bytesRead = read(REQUEST_PIPE_FD, &clientPid, 4);
         if (bytesRead < 4) {
             // todo: error
-            break;
+            std::cout << "nie odczytano pid " << data;
+            continue;
         }
 
         bytesRead = read(REQUEST_PIPE_FD, &datasize, 4);
         if (bytesRead < 4) {
+
+            std::cout << "rozmiaru " << data;
             // todo: error
-            break;
+            continue;
         }
 
         data = new char[datasize];
 
         bytesRead = read(REQUEST_PIPE_FD, data, static_cast<size_t>(datasize));
         if (bytesRead < datasize) {
+
+            std::cout << "nie odczytano danych " << data;
             // todo: error
-            break;
+            continue;
         }
 
         Request request(type, clientPid, data, datasize);
@@ -229,23 +235,22 @@ int Server::requestLoop() {
     }
 }
 
-void* Server::runRequestLoop(void *s) {
+void *Server::runRequestLoop(void *s) {
     auto server = (Server *) s;
     server->requestLoop();
 
     return nullptr;
 }
 
-void signalHandler(int sig)
-{
+void signalHandler(int sig) {
     if (sig == SIGINT || sig == SIGKILL) {
-        for (auto child: Server::childrenPIDs){
+        for (auto child: Server::childrenPIDs) {
             kill(child, SIGKILL);
         }
 
         pthread_cancel(Server::requestThread);
 
-        for (auto child: Server::childrenPIDs){
+        for (auto child: Server::childrenPIDs) {
             int status = -1;
             waitpid(child, &status, WEXITED);
         }
@@ -256,8 +261,7 @@ void signalHandler(int sig)
     }
 }
 
-void Server::initSignals()
-{
+void Server::initSignals() {
     sigact.sa_handler = signalHandler;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;

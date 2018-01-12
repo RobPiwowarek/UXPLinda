@@ -12,5 +12,6 @@ int main(int argc, char** argv) {
 
     Server server(fileNames);
 
-    return server.run();
+    server.run();
+
 }
