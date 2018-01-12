@@ -9,7 +9,6 @@
 
 class Client {
     pid_t pid;
-    sem_t *sem;// semaphore used by server;
     std::string getTupleFromServer(Request::RequestType requestType, const std::string &pattern, timeval *timeout);
 
     void handleTimeout();

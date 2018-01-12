@@ -12,7 +12,6 @@
 #define SNAME "/mysem"
 
 class Server {
-    sem_t *sem;// = sem_open(SNAME, O_CREAT, 0644, 3);
     pthread_mutex_t mutex;
     pthread_cond_t cond;
 

@@ -18,7 +18,6 @@ Server::Server(std::list<char *> fileNames) {
         RESULT_PIPE_FDS[i] = new int[2];
     }
 
-    sem = sem_open(SNAME, O_CREAT, 0644, 0);
     pthread_mutex_init(&mutex, nullptr);
     pthread_cond_init(&cond, nullptr);
 }
@@ -32,7 +31,6 @@ Server::~Server() {
 
     close(REQUEST_PIPE_FD);
 
-    sem_close(sem);
     pthread_cond_destroy(&cond);
     pthread_mutex_destroy(&mutex);
 }
@@ -102,18 +100,19 @@ int Server::setupAndExecClients(int *tempFD) {
 
 int Server::readingLoop() {
 
-    while (!shouldStop) { // todo: obsluga sygnalu czy cos ktora by to zamknela
-        sem_wait(sem);
-
+    while (!shouldStop) {
         ssize_t bytesRead;
         Request::RequestType type;
         pid_t clientPid;
         int datasize;
         char *data;
 
-        // fixme: mam nadzieje ze to nie popsuje enuma?
         bytesRead = read(REQUEST_PIPE_FD, &type, 4);
-        if (bytesRead < 1) {
+        if(bytesRead == 0) {
+            pthread_cancel(Server::requestThread);
+            return 0; // eof czyli dzieci zmarly, czas umrzec
+        }
+        if (bytesRead < 4) {
             std::cout << "Not enough data read to assemble type" << std::endl;
             return -666;
         }
@@ -124,7 +123,6 @@ int Server::readingLoop() {
             return -665;
         }
 
-        std::cout<<"reqest clientPid"<<clientPid<<std::endl;
         bytesRead = read(REQUEST_PIPE_FD, &datasize, 4);
         if (bytesRead < 4) {
             std::cout << "Not enough data read to assemble dataSize" << std::endl;
@@ -132,7 +130,6 @@ int Server::readingLoop() {
         }
 
         data = new char[datasize];
-        std::cout<<"reqest znaków"<<datasize<<std::endl;
         bytesRead = read(REQUEST_PIPE_FD, data, datasize);
         if (bytesRead < datasize) {
             std::cout << "Not enough data read to assemble data" << std::endl;
@@ -209,13 +206,11 @@ int Server::requestLoop() {
         if (nothingNew) {
             pthread_cond_wait(&cond, &mutex); // czeka na sygnal od readingLoop
         }
-        // todo - moze lepszy warunek na wyjscie?
         // wyjdz jesli glowny watek dal sygnal a nie ma requestow
         if (requests.empty()) {
             pthread_mutex_unlock(&mutex);
             break;
         }
-
 
         for (auto r = requests.begin(); r != requests.end(); ++r) {
             Tuple *t = getTupleForRequest(*r);

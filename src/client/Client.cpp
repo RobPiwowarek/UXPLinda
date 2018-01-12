@@ -4,13 +4,11 @@
 #include <signal.h>
 #include <iostream>
 #include <unistd.h>
+#include <climits>
 #include "Client.h"
-
-#define SNAME "/mysem"
 
 Client::Client() {
     pid = getpid();
-    sem = sem_open(SNAME, 0);
 }
 
 Client::~Client() {
@@ -35,21 +33,15 @@ void Client::handleTimeout() {
 }
 
 std::string Client::handleSuccess() {
-    char *data;
-    int bytesRead = ::read(ReadFD, data, 4);
-    if (bytesRead < 4) {
-        return std::to_string(bytesRead);
+    char* data = new char[PIPE_BUF];
+    std::string result;
+    int bytesRead = ::read(ReadFD, data, PIPE_BUF);
+    if(bytesRead < 1) {
+        return "";
     }
-
-    return std::to_string(bytesRead);
-    int dataSize = std::stoi(data);
-    data = new char[dataSize];
-    bytesRead = ::read(ReadFD, data, dataSize);
-    if (bytesRead < dataSize) {
-        return "ano";
-    }
-    return std::string(data);
-    //TODO rozmiar, czy wiadomosc taka sama jak do serwera czy już z mniejszym nagłówkiem
+    result = data;
+    delete data;
+    return result;
 }
 
 std::string Client::getTupleFromServer(Request::RequestType requestType, const std::string &pattern, timeval *timeout) {
@@ -58,17 +50,16 @@ std::string Client::getTupleFromServer(Request::RequestType requestType, const s
     } catch (const std::invalid_argument &error) {
         return "zly pattern";
     }
-    int patternSize = pattern.size();
+    int patternSize = pattern.size()+1;
 
-    int msgSize = 4 + 4 + 4 + patternSize+1;
+    int msgSize = 4 + 4 + 4 + patternSize;
     char *str = new char[msgSize];
     memcpy(str, &requestType, 4);
     memcpy(str + 4, &pid, 4);
     memcpy(str + 8, &patternSize, 4);
-    memcpy(str + 12, pattern.c_str(), patternSize+1);
-
-    std::cout << pid<<" zapisano" << write(WriteFD, str, msgSize) << std::endl;
-    sem_post(sem);
+    memcpy(str + 12, pattern.c_str(), patternSize);
+    write(WriteFD, str, msgSize);
+    delete str;
 
     fd_set set;
     FD_ZERO(&set);
@@ -94,23 +85,22 @@ bool Client::output(std::string tuple) {
         std::cout << error.what();
         return false;
     }
-    int tupleSize = tuple.size();
+    int tupleSize = tuple.size()+1;
     Request::RequestType type = Request::RequestType::OUTPUT;
 
-    int msgSize = 4 + 4 + 4 + tupleSize +1;
+    int msgSize = 4 + 4 + 4 + tupleSize;
     char *str = new char[msgSize];
     memcpy(str, &type, 4);
     memcpy(str + 4, &pid, 4);
     memcpy(str + 8, &tupleSize, 4);
-    memcpy(str + 12, tuple.c_str(), tupleSize+1);
+    memcpy(str + 12, tuple.c_str(), tupleSize);
     int success = write(WriteFD, str, msgSize);
-    std::cout << pid<< " wyslano" << success << std::endl;
-    sem_post(sem);
+    delete str;
     return success;
 }
 
 void Client::quit() {
     pid_t ppid = getppid();
 
-    kill(ppid, SIGKILL);
+    kill(ppid, SIGINT);
 }
