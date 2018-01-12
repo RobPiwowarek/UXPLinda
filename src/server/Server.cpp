@@ -27,8 +27,10 @@ Server::~Server() {
     delete tupleSpace;
 
     for (int i = 0; i < fileNames.size(); ++i){
-
+        close(RESULT_PIPE_FDS[i][0]);
     }
+
+    close(REQUEST_PIPE_FD);
 
     sem_close(sem);
     pthread_cond_destroy(&cond);
