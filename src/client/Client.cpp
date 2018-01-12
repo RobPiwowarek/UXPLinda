@@ -60,9 +60,9 @@ std::string Client::getTupleFromServer(Request::RequestType requestType, const s
     int msgSize=1+4+4+patternSize+1;
     char* str = new char[msgSize];
     memcpy(str , &type, 1);
-    memcpy(str, &pid, 4);
-    memcpy(str , &patternSize, 4);
-    memcpy(str , patternChar, patternSize+1);
+    memcpy(str+1, &pid, 4);
+    memcpy(str+5, &patternSize, 4);
+    memcpy(str+9, patternChar, patternSize+1);
 
     write(WriteFD, str, sizeof(msgSize));
     sem_post(sem);
@@ -96,10 +96,10 @@ bool Client::output(std::string tuple) {
     const char * tupleChar= tuple.c_str();
     int msgSize=1+4+4+tupleSize+1;
     char* str = new char[msgSize];
-    memcpy(str , &type, 1);
-    memcpy(str , &pid, 4);
-    memcpy(str , &tupleSize, 4);
-    memcpy(str , tupleChar, tupleSize+1);
+    memcpy(str, &type, 1);
+    memcpy(str+1, &pid, 4);
+    memcpy(str+5, &tupleSize, 4);
+    memcpy(str+9, tupleChar, tupleSize+1);
 
     write(WriteFD, str, sizeof(msgSize));
     sem_post(sem);
