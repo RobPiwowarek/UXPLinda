@@ -112,34 +112,28 @@ int Server::readingLoop() {
         // fixme: mam nadzieje ze to nie popsuje enuma?
         bytesRead = read(REQUEST_PIPE_FD, &type, 1);
         if (bytesRead < 1) {
-            // todo: error
-            std::cout << "nie odczytano typu " << data;
-            continue;
+            std::cout << "Not enough data read to assemble type" << std::endl;
+            return -666;
         }
 
         bytesRead = read(REQUEST_PIPE_FD, &clientPid, 4);
         if (bytesRead < 4) {
-            // todo: error
-            std::cout << "nie odczytano pid " << data;
-            continue;
+            std::cout << "Not enough data read to assemble clientPid" << std::endl;
+            return -665;
         }
 
         bytesRead = read(REQUEST_PIPE_FD, &datasize, 4);
         if (bytesRead < 4) {
-
-            std::cout << "rozmiaru " << data;
-            // todo: error
-            continue;
+            std::cout << "Not enough data read to assemble dataSize" << std::endl;
+            return -664;
         }
 
         data = new char[datasize];
 
         bytesRead = read(REQUEST_PIPE_FD, data, static_cast<size_t>(datasize));
         if (bytesRead < datasize) {
-
-            std::cout << "nie odczytano danych " << data;
-            // todo: error
-            continue;
+            std::cout << "Not enough data read to assemble data" << std::endl;
+            return -663;
         }
 
         Request request(type, clientPid, data, datasize);
