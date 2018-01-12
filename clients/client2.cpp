@@ -8,11 +8,10 @@ int main ( int argc, char *argv[] )
     timeout.tv_sec = 5;
     timeout.tv_usec= 0;
 
-    Client client;
+    Client client = Client();
 
     bool success = client.output("(5)");
 
     std::cout<< "Success in sending" <<success<<std::endl;
 
-    return EXIT_SUCCESS;
 }

@@ -112,7 +112,7 @@ int Server::readingLoop() {
         char *data;
 
         // fixme: mam nadzieje ze to nie popsuje enuma?
-        bytesRead = read(REQUEST_PIPE_FD, &type, 1);
+        bytesRead = read(REQUEST_PIPE_FD, &type, 4);
         if (bytesRead < 1) {
             std::cout << "Not enough data read to assemble type" << std::endl;
             return -666;
@@ -124,15 +124,16 @@ int Server::readingLoop() {
             return -665;
         }
 
+        std::cout<<"reqest clientPid"<<clientPid<<std::endl;
         bytesRead = read(REQUEST_PIPE_FD, &datasize, 4);
         if (bytesRead < 4) {
             std::cout << "Not enough data read to assemble dataSize" << std::endl;
             return -664;
         }
 
-        data = new char[datasize];
-
-        bytesRead = read(REQUEST_PIPE_FD, data, static_cast<size_t>(datasize));
+        data = new char[datasize+1];
+        std::cout<<"reqest znaków"<<datasize<<std::endl;
+        bytesRead = read(REQUEST_PIPE_FD, data, datasize);
         if (bytesRead < datasize) {
             std::cout << "Not enough data read to assemble data" << std::endl;
             return -663;

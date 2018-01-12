@@ -3,8 +3,9 @@
 
 #include <string>
 #include <semaphore.h>
-#include "../server/Server.h"
 #include "../server/Request.h"
+#include "../tuple/Tuple.h"
+#include "../tuple/Pattern.h"
 
 class Client {
     pid_t pid;
