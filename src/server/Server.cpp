@@ -216,15 +216,16 @@ int Server::requestLoop() {
             break;
         }
 
-        // todo - jakas optymalizacja tej petli potencjalnie?
-        for (auto r : requests) {
-            Tuple *t = getTupleForRequest(r);
+
+        for (auto r = requests.begin(); r != requests.end(); ++r) {
+            Tuple *t = getTupleForRequest(*r);
 
             if (t != nullptr) {
-                requests.pop_front();
-                pid_t childPid = r.getClientID();
+                pid_t childPid = r->getClientID();
                 sendTuple(childPid, t->toString());
                 delete t; // kopia robiona przez new
+                requests.erase(r++);
+                --r;
             }
         }
         nothingNew = true;
