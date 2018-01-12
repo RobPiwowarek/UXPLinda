@@ -16,7 +16,6 @@ class Server {
     pthread_mutex_t mutex;
     pthread_cond_t cond;
 
-
 public:
     explicit Server(std::list<char*>);
 
@@ -26,7 +25,7 @@ public:
 
     static pthread_t requestThread;
     static std::list<pid_t> childrenPIDs;
-
+    static bool shouldStop;
 private:
     TupleSpace *tupleSpace;
 

@@ -1,6 +1,6 @@
 #include <ctime>
 #include <zconf.h>
-#include <signal.h>
+#include <csignal>
 #include "Client.h"
 
 void Client::quit() {

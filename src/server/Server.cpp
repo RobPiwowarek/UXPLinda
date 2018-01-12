@@ -4,6 +4,7 @@
 
 pthread_t Server::requestThread;
 std::list<pid_t> Server::childrenPIDs;
+bool Server::shouldStop = false;
 
 Server::Server(std::list<char *> fileNames) {
     tupleSpace = new TupleSpace();
@@ -24,6 +25,10 @@ Server::Server(std::list<char *> fileNames) {
 
 Server::~Server() {
     delete tupleSpace;
+
+    for (int i = 0; i < fileNames.size(); ++i){
+
+    }
 
     sem_close(sem);
     pthread_cond_destroy(&cond);
@@ -95,7 +100,7 @@ int Server::setupAndExecClients(int *tempFD) {
 
 int Server::readingLoop() {
 
-    while (true) { // todo: obsluga sygnalu czy cos ktora by to zamknela
+    while (!shouldStop) { // todo: obsluga sygnalu czy cos ktora by to zamknela
         sem_wait(sem);
 
         ssize_t bytesRead;
@@ -227,6 +232,7 @@ int Server::requestLoop() {
 void* Server::runRequestLoop(void *s) {
     auto server = (Server *) s;
     server->requestLoop();
+
     return nullptr;
 }
 
@@ -243,6 +249,8 @@ void signalHandler(int sig)
             int status = -1;
             waitpid(child, &status, WEXITED);
         }
+
+        Server::shouldStop = true;
 
         exit(0); // lazy as fuck other than that i can set a flag for while loop.
     }
