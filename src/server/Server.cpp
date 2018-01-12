@@ -131,7 +131,7 @@ int Server::readingLoop() {
             return -664;
         }
 
-        data = new char[datasize+1];
+        data = new char[datasize];
         std::cout<<"reqest znaków"<<datasize<<std::endl;
         bytesRead = read(REQUEST_PIPE_FD, data, datasize);
         if (bytesRead < datasize) {

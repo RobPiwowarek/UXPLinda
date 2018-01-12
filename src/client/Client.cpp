@@ -60,12 +60,12 @@ std::string Client::getTupleFromServer(Request::RequestType requestType, const s
     }
     int patternSize = pattern.size();
 
-    int msgSize = 4 + 4 + 4 + patternSize + 1;
+    int msgSize = 4 + 4 + 4 + patternSize+1;
     char *str = new char[msgSize];
     memcpy(str, &requestType, 4);
     memcpy(str + 4, &pid, 4);
     memcpy(str + 8, &patternSize, 4);
-    memcpy(str + 12, pattern.c_str(), patternSize);
+    memcpy(str + 12, pattern.c_str(), patternSize+1);
 
     std::cout << pid<<" zapisano" << write(WriteFD, str, msgSize) << std::endl;
     sem_post(sem);
@@ -97,12 +97,12 @@ bool Client::output(std::string tuple) {
     int tupleSize = tuple.size();
     Request::RequestType type = Request::RequestType::OUTPUT;
 
-    int msgSize = 4 + 4 + 4 + tupleSize + 1;
+    int msgSize = 4 + 4 + 4 + tupleSize +1;
     char *str = new char[msgSize];
     memcpy(str, &type, 4);
     memcpy(str + 4, &pid, 4);
     memcpy(str + 8, &tupleSize, 4);
-    memcpy(str + 12, tuple.c_str(), tupleSize + 1);
+    memcpy(str + 12, tuple.c_str(), tupleSize+1);
     int success = write(WriteFD, str, msgSize);
     std::cout << pid<< " wyslano" << success << std::endl;
     sem_post(sem);
