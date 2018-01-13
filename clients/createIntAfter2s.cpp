@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Client createIntAfter2s send tuple: " << "(10)" << std::endl;
     bool success = client.output("(10)");
 
-    std::cout << "Client createIntAfter2s sent tuple (10) with" << success << std::endl;
+    std::cout << "Client createIntAfter2s sent tuple (10) with success: " << success << std::endl;
 
 
 }

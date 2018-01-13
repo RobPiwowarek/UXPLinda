@@ -29,27 +29,20 @@ std::string Client::read(const std::string &pattern, timeval *timeout) {
 
 void Client::handleTimeout() {
     char *request = createRequest(Request::RequestType::CANCEL, "");
-    write(WriteFD, request, strlen(request));
+    write(WriteFD, request, getRequestSize(""));
     removeCanceledTupleFromPipe();
 }
 
-std::string
-Client::getTupleFromServer(Request::RequestType requestType, const std::string &patternString, timeval *timeout) {
+std::string Client::getTupleFromServer(Request::RequestType requestType, const std::string &patternString, timeval *timeout) {
     try {
         Pattern pattern = Pattern(patternString);
     } catch (const std::invalid_argument &error) {
-        return "zly patternString";
+        return "Incorrect pattern";
     }
     removeCanceledTupleFromPipe();
-    int patternSize = patternString.size() + 1;
 
-    int msgSize = 4 + 4 + 4 + patternSize;
-    char *str = new char[msgSize];
-    memcpy(str, &requestType, 4);
-    memcpy(str + 4, &pid, 4);
-    memcpy(str + 8, &patternSize, 4);
-    memcpy(str + 12, patternString.c_str(), patternSize);
-    write(WriteFD, str, msgSize);
+    char *str = createRequest(requestType, patternString);
+    write(WriteFD, str, getRequestSize(patternString));
     delete str;
 
     fd_set set;
@@ -73,19 +66,11 @@ bool Client::output(std::string tuple) {
     try {
         Tuple temp = Tuple(tuple);
     } catch (const std::invalid_argument &error) {
-        std::cout << error.what();
+        std::cout << error.what() << std::endl;
         return false;
     }
-    int tupleSize = tuple.size() + 1;
-    Request::RequestType type = Request::RequestType::OUTPUT;
-
-    int msgSize = 4 + 4 + 4 + tupleSize;
-    char *str = new char[msgSize];
-    memcpy(str, &type, 4);
-    memcpy(str + 4, &pid, 4);
-    memcpy(str + 8, &tupleSize, 4);
-    memcpy(str + 12, tuple.c_str(), tupleSize);
-    int success = write(WriteFD, str, msgSize);
+    char *str = createRequest(Request::RequestType::OUTPUT, tuple);
+    int success = write(WriteFD, str, getRequestSize(tuple));
     delete str;
     return success;
 }
@@ -96,16 +81,20 @@ void Client::quit() {
     kill(ppid, SIGINT);
 }
 
+
+int Client::getRequestSize(const std::string& message) {
+    return 12 + message.size() + 1;
+}
+
 char *Client::createRequest(Request::RequestType requestType, const std::string &message = "") {
-    int messageLength = message.size();
-    int requestSize = 4 + 4 + 4 + messageLength + 1;
-    char *request = new char[requestSize];
+    int messageLength = message.size() + 1;
+    int requestSize = getRequestSize(message);
+    auto *request = new char[requestSize];
     memcpy(request, &requestType, 4);
     memcpy(request + 4, &pid, 4);
     memcpy(request + 8, &messageLength, 4);
-    if (messageLength > 0) {
-        memcpy(request + 12, message.c_str(), requestSize);
-    }
+    memcpy(request + 12, message.c_str(), messageLength);
+    return request;
 }
 
 std::string Client::receiveTuple() {

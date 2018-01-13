@@ -23,6 +23,7 @@ Tuple::Tuple(const std::string &tuple) : tuple(tuple) {
         throw std::invalid_argument("String too long for pipe");
     }
     if(!isTuple(tuple)) {
+        std::cout << "String: " << tuple << " is not a valid tuple" << std::endl;
         throw std::invalid_argument("String is not a valid tuple");
     }
 }
