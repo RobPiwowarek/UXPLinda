@@ -100,6 +100,9 @@ char *Client::createRequest(Request::RequestType requestType, const std::string 
 std::string Client::receiveTuple() {
     char *data = new char[PIPE_BUF];
     int bytesRead = ::read(ReadFD, data, PIPE_BUF);
+    if(bytesRead < 0) {
+        return "";
+    }
     int length = strlen(data);
     std::string tuple(data, length);
     return tuple;
@@ -109,7 +112,7 @@ void Client::removeCanceledTupleFromPipe() {
     setNonBlockingRead();
     std::string tupleString = receiveTuple();
     setBlockingRead();
-    if (tupleString.size()>0) {//send it back
+    if (tupleString.size()>0) {//send it
         output(tupleString);
     }
 }
