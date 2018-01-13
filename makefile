@@ -9,6 +9,7 @@ client:
 	g++ -std=c++11 clients/createIntAfter2s.cpp  $(clientFiles) -o createIntAfter2s -lpthread -lrt
 	g++ -std=c++11 clients/timeoutAndInput.cpp  $(clientFiles) -o timeoutAndInput -lpthread -lrt
 	g++ -std=c++11 clients/client2.cpp $(clientFiles)  -o client2 -lpthread -lrt
+	g++ -std=c++11 clients/inputOutput.cpp $(clientFiles) git stat -o inputOutput -lpthread -lrt
 
 clean:
 	rm -f server client *.o
