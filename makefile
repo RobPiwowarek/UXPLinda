@@ -1,18 +1,35 @@
-all: clean client server
-files= src/server/Server.cpp src/server/Server.h src/tuple/TupleSpace.cpp src/tuple/TupleSpace.h src/tuple/Tuple.cpp src/tuple/Tuple.h src/tuple/Pattern.cpp src/tuple/Pattern.h src/server/Request.cpp src/server/Request.h src/server/CMDParser.cpp src/server/CMDParser.h
-clientFiles= src/client/Client.cpp src/client/Client.h   src/tuple/TupleSpace.cpp src/tuple/TupleSpace.h src/tuple/Tuple.cpp src/tuple/Tuple.h src/tuple/Pattern.cpp src/tuple/Pattern.h src/server/Request.cpp src/server/Request.h 
-server:
-	g++ -std=c++11 main.cpp  $(files) -o server -lpthread -lrt
+all: clients server
 
-client:
-	g++ -std=c++11 clients/ask10sForInt.cpp  $(clientFiles) -o ask10sForInt -lpthread -lrt
-	g++ -std=c++11 clients/createIntAfter2s.cpp  $(clientFiles) -o createIntAfter2s -lpthread -lrt
-	g++ -std=c++11 clients/timeoutAndInput.cpp  $(clientFiles) -o timeoutAndInput -lpthread -lrt
-	g++ -std=c++11 clients/client2.cpp $(clientFiles)  -o client2 -lpthread -lrt
-	g++ -std=c++11 clients/inputOutput.cpp $(clientFiles)  -o inputOutput -lpthread -lrt
-	g++ -std=c++11 clients/output-input.cpp $(clientFiles)  -o outputinput -lpthread -lrt
+CC=g++ -std=c++11
+TUPLE_DIR= src/tuple/
+CLIENT_DIR= src/client/
+SERVER_DIR= src/server/
+TUPLE_OBJS= src/tuple/TupleSpace.o src/tuple/Tuple.o src/tuple/Pattern.o
+CLIENT_OBJS= src/client/Client.o
+SERVER_OBJS= src/server/Server.o src/server/Request.o src/server/CMDParser.o
+
+$(TUPLE_DIR)%.o: $(TUPLE_DIR)%.cpp $(TUPLE_DIR)%.h
+	$(CC) -c -o $@ $<
+
+$(CLIENT_DIR)%.o: $(CLIENT_DIR)%.cpp $(CLIENT_DIR)%.h $(TUPLE_OBJS)
+	$(CC) -c -o $@ $<
+
+$(SERVER_DIR)%.o: $(SERVER_DIR)%.cpp $(SERVER_DIR)%.h $(CLIENT_OBJS) $(TUPLE_OBJS)
+	$(CC) -c -o $@ $<
+server: $(SERVER_OBJS) $(CLIENT_OBJS) $(TUPLE_OBJS)
+	$(CC) -o server main.cpp $^ -lpthread
+
+
+clients: $(CLIENT_OBJS) $(TUPLE_OBJS)
+	g++ -std=c++11 clients/ask10sForInt.cpp -o ask10sForInt $^ -lpthread -lrt
+	g++ -std=c++11 clients/createIntAfter2s.cpp -o createIntAfter2s $^ -lpthread -lrt
+	g++ -std=c++11 clients/timeoutAndInput.cpp -o timeoutAndInput $^ -lpthread -lrt
+	g++ -std=c++11 clients/client2.cpp -o client2 $^ -lpthread -lrt
+	g++ -std=c++11 clients/inputOutput.cpp -o inputOutput $^ -lpthread -lrt
+	g++ -std=c++11 clients/output-input.cpp -o outputinput $^ -lpthread -lrt
+	g++ -std=c++11 clients/interactive.cpp -o interactive $^ -lpthread -lrt
 clean:
-	rm -f server client *.o
+	rm -f server client *.o $(TUPLE_DIR)*.o $(CLIENT_DIR)*.o $(SERVER_DIR)*.o
 
 #run:
 #	./server ./client
