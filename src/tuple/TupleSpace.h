@@ -3,7 +3,7 @@
 
 #include "Tuple.h"
 #include "Pattern.h"
-#include <unordered_set>
+#include <list>
 
 class TupleSpace {
 
@@ -20,7 +20,7 @@ public:
     Tuple *input(const Pattern &pattern);
 
 private:
-    std::unordered_set<Tuple> tuples;
+    std::list<Tuple> tuples;
 
 };
 
