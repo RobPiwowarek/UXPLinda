@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 			client.quit();
 			break;
 		default:
-			std::cout << "jestes uposledzony" << std::endl;
+			std::cout << "Invalid choice" << std::endl;
 	}
 
     }
