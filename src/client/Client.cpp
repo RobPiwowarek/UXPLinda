@@ -6,10 +6,11 @@
 #include <unistd.h>
 #include <climits>
 #include <fcntl.h>
+#include <sys/time.h>
 #include "Client.h"
 
 Client::Client() {
-    lastRequest=Request::RequestType::INPUT;
+    lastRequest = Request::RequestType::INPUT;
     pid = getpid();
 }
 
@@ -20,12 +21,12 @@ Client::~Client() {
 }
 
 std::string Client::input(const std::string &pattern, timeval *timeout) {
-    lastRequest=Request::RequestType::INPUT;
+    lastRequest = Request::RequestType::INPUT;
     return getTupleFromServer(Request::RequestType::INPUT, pattern, timeout);
 }
 
 std::string Client::read(const std::string &pattern, timeval *timeout) {
-    lastRequest=Request::RequestType::READ;
+    lastRequest = Request::RequestType::READ;
     return getTupleFromServer(Request::RequestType::READ, pattern, timeout);
 }
 
@@ -34,6 +35,30 @@ void Client::handleTimeout() {
     char *request = createRequest(Request::RequestType::CANCEL, "");
     write(WriteFD, request, getRequestSize(""));
     removeCanceledTupleFromPipe();
+}
+
+timeval subTimevals(const timeval &tv0, const timeval &tv1) {
+    timeval result;
+    result.tv_sec = tv0.tv_sec - tv1.tv_sec;
+    result.tv_usec = tv0.tv_usec - tv1.tv_usec;
+    return result;
+}
+
+std::string Client::handleSuccess(const std::string &patterString, timeval previousTimeout, timeval startTime) {
+    std::string received = receiveTuple();
+    Pattern pattern(patterString);
+    Tuple receivedTuple(received);
+    if (pattern.match(&receivedTuple)) {
+        return received;
+    }
+    if (lastRequest == Request::RequestType::INPUT) {
+        output(received);
+    }
+    timeval time;
+    gettimeofday(&time, 0);
+    timeval timeTaken = subTimevals(time, startTime);
+    timeval newTimeout = subTimevals(previousTimeout, timeTaken);
+    return input(patterString, &newTimeout);
 }
 
 std::string Client::getTupleFromServer(Request::RequestType requestType, const std::string &patternString, timeval *timeout) {
@@ -45,6 +70,8 @@ std::string Client::getTupleFromServer(Request::RequestType requestType, const s
     removeCanceledTupleFromPipe();
 
     char *str = createRequest(requestType, patternString);
+    timeval requestStartTime;
+    gettimeofday(&requestStartTime, 0);
     write(WriteFD, str, getRequestSize(patternString));
     delete str;
 
@@ -61,7 +88,7 @@ std::string Client::getTupleFromServer(Request::RequestType requestType, const s
         handleTimeout();
         return "timeout";
     } else {//success
-        return receiveTuple();
+        return handleSuccess(patternString, *timeout, requestStartTime);
     }
 }
 
@@ -85,7 +112,7 @@ void Client::quit() {
 }
 
 
-int Client::getRequestSize(const std::string& message) {
+int Client::getRequestSize(const std::string &message) {
     return 12 + message.size() + 1;
 }
 
@@ -103,7 +130,7 @@ char *Client::createRequest(Request::RequestType requestType, const std::string 
 std::string Client::receiveTuple() {
     char *data = new char[PIPE_BUF];
     int bytesRead = ::read(ReadFD, data, PIPE_BUF);
-    if(bytesRead < 0) {
+    if (bytesRead < 1) {
         return "";
     }
     int length = strlen(data);
@@ -115,7 +142,7 @@ void Client::removeCanceledTupleFromPipe() {
     setNonBlockingRead();
     std::string tupleString = receiveTuple();
     setBlockingRead();
-    if (tupleString.size()>2 && lastRequest==Request::RequestType::INPUT) {//send it
+    if (tupleString.size() > 2 && lastRequest == Request::RequestType::INPUT) {//send it
         output(tupleString);
     }
 }

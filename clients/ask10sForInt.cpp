@@ -7,10 +7,12 @@ int main(int argc, char *argv[]) {
     timeout.tv_sec = 10;
     timeout.tv_usec = 0;
 
+    sleep(4);
     Client client;
 
+    std::cout << "Client ask10s input Integer:>1" << std::endl;
     std::string tuple = client.input("Integer:>1", &timeout);
 
-    std::cout << "Client received tuple: " << tuple << std::endl;
+    std::cout << "Client ask10s received tuple: " << tuple << std::endl;
 
 }

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <zconf.h>
+//#include <zconf.h>
 #include <string>
 #include "../src/client/Client.h"
 

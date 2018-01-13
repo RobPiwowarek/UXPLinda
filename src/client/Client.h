@@ -3,6 +3,7 @@
 
 #include <string>
 #include <semaphore.h>
+#include <chrono>
 #include "../server/Request.h"
 #include "../tuple/Tuple.h"
 #include "../tuple/Pattern.h"
@@ -14,7 +15,7 @@ class Client {
 
     void handleTimeout();
 
-    std::string handleSuccess(Request::RequestType requestType, const std::string &patter, timeval *previousTimeout);
+    std::string handleSuccess(const std::string &patter, timeval previousTimeout, timeval startTime);
 
     char* createRequest(Request::RequestType requestType, const std::string &message);
 

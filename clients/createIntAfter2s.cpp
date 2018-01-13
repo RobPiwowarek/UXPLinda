@@ -5,7 +5,7 @@
 int main(int argc, char *argv[]) {
 
     Client client;
-    sleep(3);
+    sleep(2);
 
     std::cout << "Client createIntAfter2s send tuple: " << "(10)" << std::endl;
     bool success = client.output("(10)");

@@ -28,8 +28,8 @@ clients: $(CLIENT_OBJS) $(TUPLE_OBJS)
 	g++ -std=c++11 clients/inputOutput.cpp -o inputOutput $^ -lpthread -lrt
 	g++ -std=c++11 clients/output-input.cpp -o outputinput $^ -lpthread -lrt
 	g++ -std=c++11 clients/interactive.cpp -o interactive $^ -lpthread -lrt
-clean:
-	rm -f server client *.o $(TUPLE_DIR)*.o $(CLIENT_DIR)*.o $(SERVER_DIR)*.o
+	g++ -std=c++11 clients/onlyReading.cpp $(clientFiles)  -o onlyReading -lpthread -lrt
 
-#run:
-#	./server ./client
+clean:
+	rm -f *.o $(TUPLE_DIR)*.o $(CLIENT_DIR)*.o $(SERVER_DIR)*.o
+
