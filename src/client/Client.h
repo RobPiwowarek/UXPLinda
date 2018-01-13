@@ -13,8 +13,13 @@ class Client {
 
     void handleTimeout();
 
-    std::string handleSuccess();
+    std::string handleSuccess(Request::RequestType requestType, const std::string &patter, timeval *previousTimeout);
 
+    char* createRequest(Request::RequestType requestType, const std::string &message);
+
+    std::string receiveTuple();
+    void setNonBlockingRead();
+    void setBlockingRead();
 public:
     static const int ReadFD = 1023;
     static const int WriteFD = 1022;

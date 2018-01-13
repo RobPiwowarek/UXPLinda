@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <climits>
+#include <fcntl.h>
 #include "Client.h"
 
 Client::Client() {
@@ -12,6 +13,9 @@ Client::Client() {
 }
 
 Client::~Client() {
+    setNonBlockingRead();
+    receiveTuple();
+    setBlockingRead();
     close(ReadFD);
     close(WriteFD);
 }
@@ -26,38 +30,33 @@ std::string Client::read(const std::string &pattern, timeval *timeout) {
 
 
 void Client::handleTimeout() {
-//    auto *cancellation = new Request(Request::RequestType::CANCEL, pid, nullptr, 0);
-//    sem_post(sem);
-//    write(WriteFD, cancellation, sizeof(cancellation));
-//    sem_post(sem);
-}
-
-std::string Client::handleSuccess() {
-    char* data = new char[PIPE_BUF];
-    std::string result;
-    int bytesRead = ::read(ReadFD, data, PIPE_BUF);
-    if(bytesRead < 1) {
-        return "";
+    char * request= createRequest(Request::RequestType::CANCEL, "");
+    write(WriteFD, request, strlen(request));
+    setNonBlockingRead();
+    std::string tupleString = receiveTuple();
+    setBlockingRead();
+    if(!tupleString.empty()){//send it back
+        output(tupleString);
     }
-    result = data;
-    delete data;
-    return result;
 }
 
-std::string Client::getTupleFromServer(Request::RequestType requestType, const std::string &pattern, timeval *timeout) {
+std::string Client::getTupleFromServer(Request::RequestType requestType, const std::string &patternString, timeval *timeout) {
     try {
-        Pattern temp = Pattern(pattern);
+        Pattern pattern = Pattern(patternString);
     } catch (const std::invalid_argument &error) {
-        return "zly pattern";
+        return "zly patternString";
     }
-    int patternSize = pattern.size()+1;
+    setNonBlockingRead();
+    receiveTuple();
+    setBlockingRead();
+    int patternSize = patternString.size()+1;
 
     int msgSize = 4 + 4 + 4 + patternSize;
     char *str = new char[msgSize];
     memcpy(str, &requestType, 4);
     memcpy(str + 4, &pid, 4);
     memcpy(str + 8, &patternSize, 4);
-    memcpy(str + 12, pattern.c_str(), patternSize);
+    memcpy(str + 12, patternString.c_str(), patternSize);
     write(WriteFD, str, msgSize);
     delete str;
 
@@ -74,7 +73,7 @@ std::string Client::getTupleFromServer(Request::RequestType requestType, const s
         handleTimeout();
         return "timeout";
     } else {//success
-        return handleSuccess();
+        return receiveTuple();
     }
 }
 
@@ -104,3 +103,32 @@ void Client::quit() {
 
     kill(ppid, SIGINT);
 }
+
+char* Client::createRequest(Request::RequestType requestType, const std::string &message = "") {
+    int messageLength=message.size();
+    int requestSize = 4 + 4 + 4 + messageLength + 1;
+    char *request = new char[requestSize];
+    memcpy(request, &requestType, 4);
+    memcpy(request + 4, &pid, 4);
+    memcpy(request + 8, &messageLength, 4);
+    if (messageLength > 0) {
+        memcpy(request + 12, message.c_str(), requestSize);
+    }
+}
+std::string Client::receiveTuple(){
+    char* data = new char[PIPE_BUF];
+    int bytesRead = ::read(ReadFD, data, PIPE_BUF);
+    int length = strlen(data);
+    std::string tuple(data, length);
+    return tuple;
+}
+void::Client::setBlockingRead() {
+    int flags = fcntl(ReadFD, F_GETFL, 0);
+    fcntl(ReadFD, F_SETFL, flags &~ O_NONBLOCK);
+}
+
+void::Client::setNonBlockingRead() {
+    int flags = fcntl(ReadFD, F_GETFL, 0);
+    fcntl(ReadFD, F_SETFL, flags | O_NONBLOCK);
+}
+
