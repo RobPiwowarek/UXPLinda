@@ -11,6 +11,4 @@ int main(int argc, char *argv[]) {
     bool success = client.output("(10)");
 
     std::cout << "Client createIntAfter2s sent tuple (10) with" << success << std::endl;
-
-
 }

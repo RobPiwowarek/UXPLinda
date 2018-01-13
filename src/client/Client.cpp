@@ -9,6 +9,7 @@
 #include "Client.h"
 
 Client::Client() {
+    lastRequest=Request::RequestType::INPUT;
     pid = getpid();
 }
 
@@ -19,10 +20,12 @@ Client::~Client() {
 }
 
 std::string Client::input(const std::string &pattern, timeval *timeout) {
+    lastRequest=Request::RequestType::INPUT;
     return getTupleFromServer(Request::RequestType::INPUT, pattern, timeout);
 }
 
 std::string Client::read(const std::string &pattern, timeval *timeout) {
+    lastRequest=Request::RequestType::READ;
     return getTupleFromServer(Request::RequestType::READ, pattern, timeout);
 }
 
@@ -33,8 +36,7 @@ void Client::handleTimeout() {
     removeCanceledTupleFromPipe();
 }
 
-std::string
-Client::getTupleFromServer(Request::RequestType requestType, const std::string &patternString, timeval *timeout) {
+std::string Client::getTupleFromServer(Request::RequestType requestType, const std::string &patternString, timeval *timeout) {
     try {
         Pattern pattern = Pattern(patternString);
     } catch (const std::invalid_argument &error) {
@@ -120,7 +122,7 @@ void Client::removeCanceledTupleFromPipe() {
     setNonBlockingRead();
     std::string tupleString = receiveTuple();
     setBlockingRead();
-    if (tupleString.size()>0) {//send it back
+    if (tupleString.size()>2 && lastRequest==Request::RequestType::INPUT) {//send it back
         output(tupleString);
     }
 }
