@@ -18,6 +18,7 @@ class Client {
     char* createRequest(Request::RequestType requestType, const std::string &message);
 
     std::string receiveTuple();
+    void removeCanceledTupleFromPipe();
     void setNonBlockingRead();
     void setBlockingRead();
 public:

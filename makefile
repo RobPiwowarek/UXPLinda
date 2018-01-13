@@ -5,7 +5,9 @@ server:
 	g++ -std=c++11 main.cpp  $(files) -o server -lpthread -lrt
 
 client:
-	g++ -std=c++11 clients/client.cpp  $(clientFiles) -o client -lpthread -lrt
+	g++ -std=c++11 clients/ask10sForInt.cpp  $(clientFiles) -o ask10sForInt -lpthread -lrt
+	g++ -std=c++11 clients/createIntAfter2s.cpp  $(clientFiles) -o createIntAfter2s -lpthread -lrt
+	g++ -std=c++11 clients/timeoutAndInput.cpp  $(clientFiles) -o timeoutAndInput -lpthread -lrt
 	g++ -std=c++11 clients/client2.cpp $(clientFiles)  -o client2 -lpthread -lrt
 
 clean:
