@@ -37,6 +37,8 @@ public:
     bool output(std::string tuple);
 
     void quit();
+
+    int getRequestSize(const std::string &message);
 };
 
 
