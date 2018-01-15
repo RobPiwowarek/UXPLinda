@@ -19,5 +19,8 @@ echo ""
 echo "input-output"
 ./server ./inputOutput ./outputinput
 
+echo "thousands of request, server gets thousands of output request and 1 input in meantime. Client should get tuple. "
+./server ./createRandomInts ./ask10sForInt
 
-echo "give my tuple"
+echo "short timeouts"
+./server ./createRandomInts ./shortTimeouts ./creaRandomInts ./createRandomInts

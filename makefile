@@ -31,6 +31,7 @@ clients: $(CLIENT_OBJS) $(TUPLE_OBJS)
 	g++ -std=c++11 clients/onlyReading.cpp -o onlyReading $^ -lpthread -lrt
 	g++ -std=c++11 clients/askFor6ManyTimes.cpp -o askFor6ManyTimes $^ -lpthread -lrt
 	g++ -std=c++11 clients/create5.cpp -o create5 $^ -lpthread -lrt
+	g++ -std=c++11 clients/shortTimeouts.cpp -o shortTimeouts $^ -lpthread -lrt
 
 clean:
 	rm -f *.o $(TUPLE_DIR)*.o $(CLIENT_DIR)*.o $(SERVER_DIR)*.o
