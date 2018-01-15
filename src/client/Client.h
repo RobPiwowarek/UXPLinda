@@ -11,9 +11,9 @@
 class Client {
     pid_t pid;
     std::string getTupleFromServer(Request::RequestType requestType, const std::string &pattern, timeval *timeout);
-    Request::RequestType lastRequest;
+    Request::RequestType lastCanceledRequest;
 
-    void handleTimeout();
+    void handleTimeout(Request::RequestType type);
 
     std::string handleSuccess(const std::string &patter, timeval previousTimeout, timeval startTime);
 

@@ -24,11 +24,13 @@ clients: $(CLIENT_OBJS) $(TUPLE_OBJS)
 	g++ -std=c++11 clients/ask10sForInt.cpp -o ask10sForInt $^ -lpthread -lrt
 	g++ -std=c++11 clients/createIntAfter2s.cpp -o createIntAfter2s $^ -lpthread -lrt
 	g++ -std=c++11 clients/timeoutAndInput.cpp -o timeoutAndInput $^ -lpthread -lrt
-	g++ -std=c++11 clients/client2.cpp -o client2 $^ -lpthread -lrt
+	g++ -std=c++11 clients/createRandomInts.cpp -o createRandomInts $^ -lpthread -lrt
 	g++ -std=c++11 clients/inputOutput.cpp -o inputOutput $^ -lpthread -lrt
 	g++ -std=c++11 clients/output-input.cpp -o outputinput $^ -lpthread -lrt
 	g++ -std=c++11 clients/interactive.cpp -o interactive $^ -lpthread -lrt
 	g++ -std=c++11 clients/onlyReading.cpp -o onlyReading $^ -lpthread -lrt
+	g++ -std=c++11 clients/askFor6ManyTimes.cpp -o askFor6ManyTimes $^ -lpthread -lrt
+	g++ -std=c++11 clients/create5.cpp -o create5 $^ -lpthread -lrt
 
 clean:
 	rm -f *.o $(TUPLE_DIR)*.o $(CLIENT_DIR)*.o $(SERVER_DIR)*.o

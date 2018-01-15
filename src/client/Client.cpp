@@ -10,7 +10,7 @@
 #include "Client.h"
 
 Client::Client() {
-    lastRequest = Request::RequestType::INPUT;
+    lastCanceledRequest = Request::RequestType::INPUT;
     pid = getpid();
 }
 
@@ -21,20 +21,20 @@ Client::~Client() {
 }
 
 std::string Client::input(const std::string &pattern, timeval *timeout) {
-    lastRequest = Request::RequestType::INPUT;
     return getTupleFromServer(Request::RequestType::INPUT, pattern, timeout);
 }
 
 std::string Client::read(const std::string &pattern, timeval *timeout) {
-    lastRequest = Request::RequestType::READ;
     return getTupleFromServer(Request::RequestType::READ, pattern, timeout);
 }
 
 
-void Client::handleTimeout() {
+void Client::handleTimeout(Request::RequestType type) {
+    lastCanceledRequest = type;
     char *request = createRequest(Request::RequestType::CANCEL, "");
     write(WriteFD, request, getRequestSize(""));
     removeCanceledTupleFromPipe();
+    delete request;
 }
 
 timeval subTimevals(const timeval &tv0, const timeval &tv1) {
@@ -51,7 +51,7 @@ std::string Client::handleSuccess(const std::string &patterString, timeval previ
     if (pattern.match(&receivedTuple)) {
         return received;
     }
-    if (lastRequest == Request::RequestType::INPUT) {
+    if (lastCanceledRequest == Request::RequestType::INPUT) {
         output(received);
     }
     timeval time;
@@ -67,9 +67,10 @@ std::string Client::getTupleFromServer(Request::RequestType requestType, const s
     } catch (const std::invalid_argument &error) {
         return "Incorrect pattern";
     }
-    removeCanceledTupleFromPipe();
 
     char *str = createRequest(requestType, patternString);
+    removeCanceledTupleFromPipe();
+
     timeval requestStartTime;
     gettimeofday(&requestStartTime, 0);
     write(WriteFD, str, getRequestSize(patternString));
@@ -85,7 +86,7 @@ std::string Client::getTupleFromServer(Request::RequestType requestType, const s
     if (value == -1) {//error
         return "error";
     } else if (value == 0) {//timeOut
-        handleTimeout();
+        handleTimeout(requestType);
         return "timeout";
     } else {//success
         return handleSuccess(patternString, *timeout, requestStartTime);
@@ -135,6 +136,7 @@ std::string Client::receiveTuple() {
     }
     int length = strlen(data);
     std::string tuple(data, length);
+    delete data;
     return tuple;
 }
 
@@ -142,7 +144,7 @@ void Client::removeCanceledTupleFromPipe() {
     setNonBlockingRead();
     std::string tupleString = receiveTuple();
     setBlockingRead();
-    if (tupleString.size() > 2 && lastRequest == Request::RequestType::INPUT) {//send it
+    if (tupleString.size() > 2 && lastCanceledRequest == Request::RequestType::INPUT) {//send it
         output(tupleString);
     }
 }
