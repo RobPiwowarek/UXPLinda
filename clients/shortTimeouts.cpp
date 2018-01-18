@@ -11,6 +11,7 @@ int main(void){
     for (int i = 0; i < 10; ++i) {
 
         int num=rand()%10;
+        timeout = {1, 0};
         std::string tuple = client.input(("Integer:=="+std::to_string(num)), &timeout);
         std::cout << "Received: " << tuple << std::endl;
     }

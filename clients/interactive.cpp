@@ -11,6 +11,7 @@ int main(int argc, char *argv[]) {
     Client client;
 
     while(true){
+		timeout = {2, 0};
 	int a = 0;
         std::cout << "Podaj operacje: " << std::endl;
         std::cout << "0 - input" << std::endl;

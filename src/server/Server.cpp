@@ -88,6 +88,10 @@ int Server::setupAndExecClients(int *tempFD) {
             dup2(tempFD[1], Client::WriteFD);
             dup2(RESULT_PIPE_FDS[pipeIndex][0], Client::ReadFD);
             execve(file, nullptr, nullptr); // chyba lepiej uzyc execl
+            // jesli exec sie nie udal zabij serwer
+            std::cout << "could not exec " << file << ", aborting" << std::endl;
+            pid_t ppid = getppid();
+            kill(ppid, SIGINT);
         } else {
             childrenPIDs.push_back(pid);
         }

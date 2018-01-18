@@ -1,12 +1,10 @@
 #ifndef UXPLINDA_PATTERN_H
 #define UXPLINDA_PATTERN_H
 
-// dont judge me for this
 #define PATTERN_REGEX R"((((String:\s*(((>|<|>=|<=|==)?"[^"]*")|\*))|(Integer:\s*(((>|<|>=|<=|==)?(-?\d+))|\*)))(,\s*((String:\s*(((>|<|>=|<=|==)?"[^"]*")|\*))|(Integer:\s*(((>|<|>=|<=|==)?(-?\d+))|\*))))*))"
 
 #include <unordered_map>
-
-class Tuple;
+#include "Tuple.h"
 
 class Pattern {
 

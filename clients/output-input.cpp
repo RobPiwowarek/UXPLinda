@@ -9,6 +9,7 @@ int main(void){
     timeout.tv_usec = 0;
 
     for (int i = 0; i < 10; ++i) {
+        timeout = {2, 0};
         client.output("(5, 10)");
 
         std::string tuple = client.input(("String: *"), &timeout);

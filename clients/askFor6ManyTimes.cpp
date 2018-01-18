@@ -9,6 +9,7 @@ int main(int argc, char *argv[]) {
 
     Client client = Client();
     for (int i = 0; i < 5; i++) {
+        timeout = {2, 0};
         std::cout << "asked for Integer:==6" << std::endl;
         std::string tuple = client.input("Integer:==6", &timeout);
         std::cout << "received tuple" << tuple << std::endl;

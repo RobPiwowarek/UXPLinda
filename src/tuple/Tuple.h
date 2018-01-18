@@ -5,7 +5,6 @@
 
 #include <unordered_map>
 #include <regex>
-#include "Pattern.h"
 
 class Tuple {
 public:

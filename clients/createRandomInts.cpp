@@ -15,6 +15,7 @@ int main ( int argc, char *argv[] )
     std::cout << "Client rand's creating random tuples" << std::endl;
     srand (time(NULL));
     for(int i = 0 ; i<7000; i++){
+        timeout = {20, 0};
         int num=rand()%10;
         std::string msg="("+std::to_string(num)+")";
         client.output(msg);

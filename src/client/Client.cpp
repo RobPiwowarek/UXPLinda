@@ -85,6 +85,7 @@ std::string Client::getTupleFromServer(Request::RequestType requestType, const s
     int value = select(ReadFD + 1, &set, nullptr, nullptr, &timeout_select); //ReadFD+1 cause select needs so
 
     if (value == -1) {//error
+        std::cout << strerror(errno) << std::endl;
         return "error";
     } else if (value == 0) {//timeOut
         handleTimeout(requestType);

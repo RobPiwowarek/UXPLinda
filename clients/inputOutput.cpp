@@ -10,6 +10,7 @@ int main(int argc, char *argv[]) {
     Client client;
 
     for(int i = 0; i < 10; ++i) {
+        timeout = {2, 0};
         std::string t1 = client.input("Integer:*, Integer:*", &timeout);
         std::cout << "client inputOutput: received tuple: " << t1 << std::endl;
         client.output("(\":o)\")");
