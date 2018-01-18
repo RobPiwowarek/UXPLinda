@@ -13,6 +13,9 @@ int main(int argc, char *argv[]) {
         std::cout << "asked for Integer:==6" << std::endl;
         std::string tuple = client.input("Integer:==6", &timeout);
         std::cout << "received tuple" << tuple << std::endl;
+        if(tuple=="timeout" || tuple == "error"){
+            std::cout << "ERROR Client ask10sFor6 hasn't received the tuple, make sure it was send" << tuple << std::endl;
+        }
     }
 
 }

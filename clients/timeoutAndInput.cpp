@@ -14,6 +14,7 @@ int main(int argc, char *argv[]) {
     std::string tuple1 = client.input("Integer:*", &timeout);
     std::cout << "Client timeoutAndInput received: " << tuple1 << std::endl;
 
+    timeout = {2, 0};
     std::cout << "Client timeoutAndInput is asking for: " << "String:*" << std::endl;
     std::string tuple2 = client.input("String:*", &timeout);
     std::cout << "Client timeoutAndInput received: " << tuple2 << std::endl;

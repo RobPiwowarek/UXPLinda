@@ -39,27 +39,60 @@ void Client::handleTimeout(Request::RequestType type) {
 
 timeval subTimevals(const timeval &tv0, const timeval &tv1) {
     timeval result;
-    result.tv_sec = tv0.tv_sec - tv1.tv_sec;
-    result.tv_usec = tv0.tv_usec - tv1.tv_usec;
+    if (tv0.tv_sec > tv1.tv_sec) {
+        result.tv_sec = tv0.tv_sec - tv1.tv_sec;
+    } else {
+        result.tv_sec = 0;
+    }
+    if (tv0.tv_sec > tv1.tv_sec) {
+        result.tv_usec = tv0.tv_usec - tv1.tv_usec;
+    } else {
+        result.tv_usec = 0;
+    }
     return result;
 }
 
-std::string Client::handleSuccess(const std::string &patterString, timeval previousTimeout, timeval startTime) {
+std::string Client::handleSuccess(Request::RequestType requestType, const std::string &patterString, timeval *previousTimeout, timeval *requestStartTime) {
     std::string received = receiveTuple();
     Pattern pattern(patterString);
 
-    Tuple receivedTuple (received);
+    Tuple receivedTuple(received);
     if (pattern.match(&receivedTuple)) {
-        return received;
+        return received;//received proper tuple
     }
-    if (lastCanceledRequest == Request::RequestType::INPUT) {//received tuple does not match - probably was an answer to canceled request
+    //received tuple does not match - probably was an answer to canceled request
+    if (lastCanceledRequest ==Request::RequestType::INPUT) {
         output(received);
     }
+    //keep listen for the previous request
     timeval time;
     gettimeofday(&time, 0);
-    timeval timeTaken = subTimevals(time, startTime);
-    timeval newTimeout = subTimevals(previousTimeout, timeTaken);
-    return input(patterString, &newTimeout);
+    timeval timeTaken = subTimevals(time, *requestStartTime);
+    timeval newTimeout = subTimevals(*previousTimeout, timeTaken);
+    if (newTimeout.tv_sec > 0 || newTimeout.tv_usec > 100) {
+        timeval newStartTime;
+        gettimeofday(&newStartTime, 0);
+        return listenForTuple(requestType, patterString, &newTimeout, &newStartTime);
+    }
+    return "timeout";// not enough time to resend
+}
+
+std::string Client::listenForTuple(Request::RequestType requestType, const std::string &patternString, timeval *timeout, timeval *requestStartTime) {
+
+    fd_set set;
+    FD_ZERO(&set);
+    FD_SET(ReadFD, &set);
+    int value = select(ReadFD + 1, &set, nullptr, nullptr, timeout); //ReadFD+1 cause select needs so
+
+    if (value == -1) {//error
+        std::cout << strerror(errno) << std::endl;
+        return "error";
+    } else if (value == 0) {//timeOut
+        handleTimeout(requestType);
+        return "timeout";
+    } else {//success
+        return handleSuccess(requestType, patternString, timeout, requestStartTime);
+    }
 }
 
 std::string Client::getTupleFromServer(Request::RequestType requestType, const std::string &patternString, timeval *timeout) {
@@ -76,23 +109,7 @@ std::string Client::getTupleFromServer(Request::RequestType requestType, const s
     gettimeofday(&requestStartTime, 0);
     write(WriteFD, str, getRequestSize(patternString));
     delete str;
-
-    fd_set set;
-    FD_ZERO(&set);
-    FD_SET(ReadFD, &set);
-
-    timeval timeout_select = *timeout;
-    int value = select(ReadFD + 1, &set, nullptr, nullptr, &timeout_select); //ReadFD+1 cause select needs so
-
-    if (value == -1) {//error
-        std::cout << strerror(errno) << std::endl;
-        return "error";
-    } else if (value == 0) {//timeOut
-        handleTimeout(requestType);
-        return "timeout";
-    } else {//success
-        return handleSuccess(patternString, *timeout, requestStartTime);
-    }
+    return listenForTuple(requestType, patternString, timeout, &requestStartTime);
 }
 
 bool Client::output(std::string tuple) {

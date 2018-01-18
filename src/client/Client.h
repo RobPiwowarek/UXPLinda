@@ -10,19 +10,27 @@
 
 class Client {
     pid_t pid;
+
     std::string getTupleFromServer(Request::RequestType requestType, const std::string &pattern, timeval *timeout);
+
     Request::RequestType lastCanceledRequest;
 
     void handleTimeout(Request::RequestType type);
 
-    std::string handleSuccess(const std::string &patter, timeval previousTimeout, timeval startTime);
+    std::string handleSuccess(Request::RequestType requestType, const std::string &patter, timeval *previousTimeout,timeval *startTime);
 
-    char* createRequest(Request::RequestType requestType, const std::string &message);
+    char *createRequest(Request::RequestType requestType, const std::string &message);
 
     std::string receiveTuple();
+
     void removeCanceledTupleFromPipe();
+
     void setNonBlockingRead();
+
     void setBlockingRead();
+
+    std::string listenForTuple(Request::RequestType requestType, const std::string &patternString, timeval *timeout, timeval *startTime);
+
 public:
     static const int ReadFD = 1023;
     static const int WriteFD = 1022;
