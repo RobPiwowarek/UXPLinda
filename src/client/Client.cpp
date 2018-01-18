@@ -47,12 +47,7 @@ timeval subTimevals(const timeval &tv0, const timeval &tv1) {
 std::string Client::handleSuccess(const std::string &patterString, timeval previousTimeout, timeval startTime) {
     std::string received = receiveTuple();
     Pattern pattern(patterString);
-//
-//    try{
-//        Tuple receivedTuple (received);
-//    }catch (std::invalid_argument){
-//        throw std::runtime_error("Received incorrect tuples");
-//    }
+
     Tuple receivedTuple (received);
     if (pattern.match(&receivedTuple)) {
         return received;
@@ -142,6 +137,7 @@ std::string Client::receiveTuple() {
     }
     int length = strlen(data);
     std::string tuple(data, length);
+
     delete data;
     return tuple;
 }
@@ -151,11 +147,6 @@ void Client::removeCanceledTupleFromPipe() {
     std::string tupleString = receiveTuple();
     setBlockingRead();
     if (tupleString.size() > 2 && lastCanceledRequest == Request::RequestType::INPUT) {//send it
-//        try{
-//            Tuple tuple(tupleString);
-//        }catch (std::invalid_argument){
-//            throw std::runtime_error("Received incorrect tuples");
-//        }
         output(tupleString);
     }
 }

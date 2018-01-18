@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./createRandomInts ./shortTimeouts ./shortTimeouts./createRandomInts ./shortTimeouts ./createRandomInts ./createRandomInts ./shortTimeouts
+./server ./createRandomInts ./shortTimeouts ./shortTimeouts ./createRandomInts ./shortTimeouts ./createRandomInts ./createRandomInts ./shortTimeouts
